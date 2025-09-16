@@ -1,0 +1,83 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-4">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">📚 Biblioteca Virtual</h1>
+    <div>
+      <span class="me-3">Bienvenido, {{ user.username }}</span>
+      <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm"
+        >Cerrar sesión</a
+      >
+    </div>
+  </div>
+
+  <!-- Buscador -->
+  <form method="get" action="" class="mb-4">
+    <input
+      type="text"
+      name="q"
+      class="form-control"
+      placeholder="Buscar libro por título o autor..."
+      value="{{ request.GET.q }}"
+    />
+  </form>
+
+  <!-- Botón agregar libro -->
+  <div class="mb-4">
+    <a href="{% url 'agregar_libro' %}" class="btn btn-success">
+      + Agregar libro
+    </a>
+  </div>
+
+  <!-- Listado de categorías y libros -->
+  {% for categoria in categorias %}
+  <div class="mb-5">
+    <h2 class="text-primary">
+      {{ categoria.nombre }}
+      <span class="badge bg-secondary">{{ categoria.libros.count }}</span>
+    </h2>
+    <div class="row">
+      {% for libro in categoria.libros.all %}
+      <div class="col-md-3 mb-3">
+        <div class="card h-100 shadow-sm">
+          {% if libro.portada %}
+          <img
+            src="{{ libro.portada.url }}"
+            class="card-img-top"
+            alt="{{ libro.titulo }}"
+          />
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ libro.titulo }}</h5>
+            <p class="card-text"><small>{{ libro.autor }}</small></p>
+            <p class="card-text">
+              <small class="text-muted">{{ libro.año }}</small>
+            </p>
+          </div>
+          <div class="card-footer d-flex justify-content-between">
+            <a
+              href="{{ libro.archivo.url }}"
+              target="_blank"
+              class="btn btn-sm btn-primary"
+              >Leer</a
+            >
+            <a
+              href="{% url 'editar_libro' libro.id %}"
+              class="btn btn-sm btn-warning"
+              >Editar</a
+            >
+            {% if libro.archivo %}
+            <!--  -->
+
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-muted">No hay libros en esta categoría.</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

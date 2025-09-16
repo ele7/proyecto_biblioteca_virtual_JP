@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+<!--  -->
+{% block content %}
+<h1>Editar Usuario</h1>
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label>Usuario</label>
+    <input
+      type="text"
+      name="username"
+      value="{{ usuario.username }}"
+      class="form-control"
+    />
+  </div>
+  <div class="mb-3">
+    <label>Email</label>
+    <input
+      type="email"
+      name="email"
+      value="{{ usuario.email }}"
+      class="form-control"
+    />
+  </div>
+  <div class="mb-3">
+    <label>Contraseña (dejar vacío para no cambiar)</label>
+    <input type="password" name="password" class="form-control" />
+  </div>
+  <button type="submit" class="btn btn-primary">Guardar</button>
+  <a href="{% url 'usuarios_listar' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

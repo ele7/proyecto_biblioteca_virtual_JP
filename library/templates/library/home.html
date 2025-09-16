@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+
+<!-- Slider -->
+<div class="swiper slider">
+  <div class="swiper-wrapper">
+    <div class="swiper-slide" style="background-image:url('{% static "img/slide1.jpg" %}')"></div>
+    <div class="swiper-slide" style="background-image:url('{% static "img/slide2.jpg" %}')"></div>
+    <div class="swiper-slide" style="background-image:url('{% static "img/slide3.jpg" %}')"></div>
+  </div>
+  <!-- Botones -->
+  <div class="swiper-button-next"></div>
+  <div class="swiper-button-prev"></div>
+</div>
+
+<!-- Banners -->
+<div class="banners">
+  <div class="banner" style="background-image:url('{% static "img/banner1.jpg" %}')"></div>
+  <div class="banner" style="background-image:url('{% static "img/banner2.jpg" %}')"></div>
+  <div class="banner" style="background-image:url('{% static "img/banner3.jpg" %}')"></div>
+</div>
+
+<!-- Productos -->
+<div class="productos">
+  {% for producto in productos %}
+    <div class="producto">
+      <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+      <h4>{{ producto.nombre }}</h4>
+      <p class="precio">${{ producto.precio }}</p>
+      <a href="#" class="btn">Agregar al carro</a>
+    </div>
+  {% empty %}
+    <p>No hay productos disponibles.</p>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const swiper = new Swiper('.swiper', {
+    loop: true,
+    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+  });
+</script>
+{% endblock %}

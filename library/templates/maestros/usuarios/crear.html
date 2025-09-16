@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+<!--  -->
+{% block content %}
+<h1>Crear Usuario</h1>
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label>Usuario</label>
+    <input type="text" name="username" class="form-control" />
+  </div>
+  <div class="mb-3">
+    <label>Email</label>
+    <input type="email" name="email" class="form-control" />
+  </div>
+  <div class="mb-3">
+    <label>Contraseña</label>
+    <input type="password" name="password" class="form-control" />
+  </div>
+  <button type="submit" class="btn btn-primary">Crear</button>
+  <a href="{% url 'usuarios_listar' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}
