@@ -1,0 +1,81 @@
+{% extends "base.html" %} {% load static %}
+<!---->
+{% block title %}{{ libro.titulo }}{% endblock %}
+<!---->
+{% block content %}
+<div class="container mt-4">
+  <!-- Botón volver -->
+  <a
+    href="{% url 'library:libros_por_categoria' libro.categoria.id %}"
+    class="btn btn-outline-secondary mb-4"
+  >
+    ← Volver a {{ libro.categoria.nombre }}
+  </a>
+
+  <div class="row">
+    <!-- Portada del libro -->
+    <div class="col-md-4">
+      {% if libro.portada %}
+      <img
+        src="{{ libro.portada.url }}"
+        class="img-fluid rounded shadow"
+        alt="{{ libro.titulo }}"
+      />
+      {% else %}
+      <img
+        src="{% static 'images/default-book-cover.jpg' %}"
+        class="img-fluid rounded shadow"
+        alt="Portada no disponible"
+      />
+      {% endif %}
+    </div>
+
+    <!-- Información del libro -->
+    <div class="col-md-8">
+      <h1 class="mb-3">{{ libro.titulo }}</h1>
+      <h4 class="text-muted mb-4">por {{ libro.autor }}</h4>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-sm-4">
+              <strong>Categoría:</strong>
+            </div>
+            <div class="col-sm-8">{{ libro.categoria.nombre }}</div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-sm-4">
+              <strong>Año:</strong>
+            </div>
+            <div class="col-sm-8">{{ libro.año }}</div>
+          </div>
+
+          {% if libro.descripcion %}
+          <div class="row mb-3">
+            <div class="col-sm-4">
+              <strong>Descripción:</strong>
+            </div>
+            <div class="col-sm-8">
+              <p class="mb-0">{{ libro.descripcion }}</p>
+            </div>
+          </div>
+          {% endif %} {% if libro.archivo %}
+          <div class="row mt-4">
+            <div class="col-12">
+              <a
+                href="{% url 'library:leer_libro' libro.id %}"
+                class="btn btn-info btn-sm mt-auto"
+                >Leer</a
+              >
+                📥 leer
+              </a>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

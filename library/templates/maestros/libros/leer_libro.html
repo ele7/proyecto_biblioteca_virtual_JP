@@ -1,0 +1,77 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-4">
+  <h1>{{ libro.titulo }}</h1>
+  <p><strong>Autor:</strong> {{ libro.autor }}</p>
+
+  {% if libro.archivo %}
+  <div class="pdf-controls mb-2">
+    <button id="prev-page" class="btn btn-sm btn-primary">← Anterior</button>
+    <span
+      >Página: <span id="page-num">1</span> /
+      <span id="page-count">1</span></span
+    >
+    <button id="next-page" class="btn btn-sm btn-primary">Siguiente →</button>
+  </div>
+
+  <canvas id="pdf-render" style="border: 1px solid #ccc; width: 100%"></canvas>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.min.js"></script>
+  <script>
+    const url = "{{ libro.archivo.url }}";
+    const pdfjsLib = window["pdfjs-dist/build/pdf"];
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.worker.min.js";
+
+    let pdfDoc = null,
+      pageNum = 1,
+      scale = 1.2,
+      canvas = document.getElementById("pdf-render"),
+      ctx = canvas.getContext("2d");
+
+    function renderPage(num) {
+      pdfDoc.getPage(num).then((page) => {
+        const viewport = page.getViewport({ scale: scale });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderCtx = {
+          canvasContext: ctx,
+          viewport: viewport,
+        };
+        page.render(renderCtx);
+
+        document.getElementById("page-num").textContent = num;
+      });
+    }
+
+    pdfjsLib.getDocument(url).promise.then((pdf) => {
+      pdfDoc = pdf;
+      document.getElementById("page-count").textContent = pdfDoc.numPages;
+      renderPage(pageNum);
+    });
+
+    document.getElementById("prev-page").addEventListener("click", () => {
+      if (pageNum <= 1) return;
+      pageNum--;
+      renderPage(pageNum);
+    });
+
+    document.getElementById("next-page").addEventListener("click", () => {
+      if (pageNum >= pdfDoc.numPages) return;
+      pageNum++;
+      renderPage(pageNum);
+    });
+  </script>
+
+  {% else %}
+  <p>No hay archivo PDF disponible.</p>
+  {% endif %}
+
+  <a
+    href="{% url 'library:libros_por_categoria' libro.categoria.id %}"
+    class="btn btn-secondary mt-3"
+  >
+    ← Volver a {{ libro.categoria.nombre }}
+  </a>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+<!---->
+{% block title %}Listado de Libros{% endblock %}
+<!---->
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">Listado de Libros</h1>
+  <a href="{% url 'library:agregar_libro' %}" class="btn btn-success mb-3"
+    >Crear Libro</a
+  >
+  <table class="table table-borderless">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Autor</th>
+        <th>Categoría</th>
+        <th>Año</th>
+        <th>Portada</th>
+        <th>Archivo PDF</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for libro in libros %}
+      <tr>
+        <td>{{ libro.id }}</td>
+        <td>{{ libro.titulo }}</td>
+        <td>{{ libro.autor }}</td>
+        <td>{{ libro.categoria }}</td>
+        <td>{{ libro.año }}</td>
+        <td>
+          {% if libro.portada %}
+          <img src="{{ libro.portada.url }}" alt="Portada" width="50" />
+          {% endif %}
+        </td>
+        <td>
+          {% if libro.archivo %}
+          <a href="{{ libro.archivo.url }}" target="_blank">Ver PDF</a>
+          {% endif %}
+        </td>
+        <td>
+          <a
+            href="{% url 'library:editar_libro' libro.id %}"
+            class="btn btn-sm btn-primary"
+            >Editar</a
+          >
+
+          <!-- Puedes agregar un botón de eliminar más adelante -->
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8">No hay libros registrados.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

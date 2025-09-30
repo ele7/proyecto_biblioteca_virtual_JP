@@ -3,11 +3,11 @@
 {% block content %}
 <div class="container mt-4">
   <h2>Listado de Categorías</h2>
-  <a href="{% url 'categorias_crear' %}" class="btn btn-success mb-3"
+  <a href="{% url 'library:categorias_crear' %}" class="btn btn-success mb-3"
     >Nueva Categoría</a
   >
-  <table class="table table-bordered table-striped">
-    <thead>
+  <table class="table table-borderless">
+    <thead class="table-dark">
       <tr>
         <th>ID</th>
         <th>Nombre</th>
@@ -22,7 +22,7 @@
 
         <td>
           <a
-            href="{% url 'categorias_editar' categoria.id %}"
+            href="{% url 'library:categorias_editar' categoria.id %}"
             class="btn btn-primary btn-sm"
             >Editar</a
           >

@@ -16,19 +16,9 @@
         required
       />
     </div>
-    <div class="mb-3">
-      <label for="descripcion" class="form-label">Descripción</label>
-      <textarea
-        class="form-control"
-        id="descripcion"
-        name="descripcion"
-        rows="3"
-      >
-{{ categoria.descripcion }}</textarea
-      >
-    </div>
+
     <button type="submit" class="btn btn-primary">Actualizar</button>
-    <a href="{% url 'categorias_listar' %}" class="btn btn-secondary"
+    <a href="{% url 'library:categorias_listar' %}" class="btn btn-secondary"
       >Cancelar</a
     >
   </form>

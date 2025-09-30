@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+<!---->
+{% block content %}
+<h1>Agregar Libro</h1>
+
+{% if messages %} {% for message in messages %}
+<div
+  class="alert alert-{{ message.tags }} alert-dismissible fade show"
+  role="alert"
+>
+  {{ message }}
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close"
+  ></button>
+</div>
+{% endfor %} {% endif %}
+
+<form method="POST" enctype="multipart/form-data" class="row g-3">
+  {% csrf_token %}
+
+  <!-- Título y Autor -->
+  <div class="col-12 col-md-6">
+    {{ form.titulo.label_tag }} {{ form.titulo }}
+  </div>
+  <div class="col-12 col-md-6">{{ form.autor.label_tag }} {{ form.autor }}</div>
+
+  <!-- Año y Categoría -->
+  <div class="col-8 col-md-4">{{ form.año.label_tag }} {{ form.año }}</div>
+  <div class="col-8 col-md-4">
+    {{ form.categoria.label_tag }} {{ form.categoria }}
+  </div>
+
+  <!-- Descripción -->
+  <div class="col-10">
+    {{ form.descripcion.label_tag }} {{ form.descripcion }}
+  </div>
+
+  <!-- Portada y Archivo -->
+  <div class="col-10 col-md-5">
+    {{ form.portada.label_tag }} {{ form.portada }}
+  </div>
+  <div class="col-10 col-md-5">
+    {{ form.archivo.label_tag }} {{ form.archivo }}
+  </div>
+
+  <!-- Botón enviar -->
+  <div class="col-3">
+    <button type="submit" class="btn btn-primary w-100">Agregar Libro</button>
+  </div>
+</form>
+{% endblock %}

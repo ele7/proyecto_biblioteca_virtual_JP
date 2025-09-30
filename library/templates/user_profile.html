@@ -1,0 +1,35 @@
+<div class="recent-visits">
+  <h3>Visitas Recientes</h3>
+  {% for visit in recent_visits %}
+  <div class="visit-item">
+    <div class="visit-date">{{ visit.fecha_hora|date:"d/m/Y H:i" }}</div>
+    <div class="visit-details">
+      IP: {{ visit.ip_address|default:"No disponible" }}
+    </div>
+  </div>
+  {% empty %}
+  <p>No hay visitas registradas.</p>
+  {% endfor %}
+</div>
+
+<script>
+  function updateStats() {
+    fetch('{% url "library:visit_stats_api" %}')
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.error) {
+          document.querySelector(
+            ".stat-card:nth-child(1) .stat-number"
+          ).innerText = data.total_visits;
+          document.querySelector(
+            ".stat-card:nth-child(2) .stat-number"
+          ).innerText = data.last_visit || "Hoy";
+          document.querySelector(
+            ".stat-card:nth-child(3) .stat-number"
+          ).innerText = data.first_visit || "Desconocido";
+        }
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+  setInterval(updateStats, 300000); // cada 5 minutos
+</script>

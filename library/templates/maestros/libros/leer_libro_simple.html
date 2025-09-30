@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Leer Libro</title>
+  </head>
+  <body>
+    <h1>Libro: {{ libro.titulo }}</h1>
+    <p>Autor: {{ libro.autor }}</p>
+    <p>Categoría: {{ libro.categoria.nombre }}</p>
+
+    {% if libro.archivo %}
+    <iframe src="{{ libro.archivo.url }}" width="100%" height="600px"></iframe>
+    {% else %}
+    <p>No hay archivo</p>
+    {% endif %}
+
+    <br />
+    <a href="/dashboard/">Volver</a>
+  </body>
+</html>

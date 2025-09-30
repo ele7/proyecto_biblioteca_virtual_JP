@@ -1,0 +1,79 @@
+{% extends 'base.html' %} {% block title %}Editar Libro{% endblock %}
+<!---->
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">Editar Libro</h1>
+
+  <!-- Mensajes -->
+  {% if messages %} {% for message in messages %}
+  <div
+    class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}"
+    role="alert"
+  >
+    {{ message }}
+  </div>
+  {% endfor %} {% endif %}
+
+  <form method="POST" enctype="multipart/form-data" class="row g-3">
+    {% csrf_token %}
+
+    <!-- Título y Autor -->
+    <div class="col-12 col-md-6">
+      {{ form.titulo.label_tag }} {{ form.titulo }}
+    </div>
+    <div class="col-12 col-md-6">
+      {{ form.autor.label_tag }} {{ form.autor }}
+    </div>
+
+    <!-- Categoría y Año -->
+    <div class="col-12 col-md-6">
+      {{ form.categoria.label_tag }} {{ form.categoria }}
+    </div>
+    <div class="col-12 col-md-6">{{ form.año.label_tag }} {{ form.año }}</div>
+
+    <!-- Portada y Archivo PDF -->
+    <div class="col-12 col-md-6">
+      <label for="id_portada" class="form-label">Portada</label>
+
+      {% if libro.portada %}
+      <div class="mb-2">
+        <img
+          src="{{ libro.portada.url }}"
+          alt="Portada"
+          style="
+            max-width: 200px;
+            height: auto;
+            border: 1px solid #ccc;
+            padding: 5px;
+          "
+        />
+      </div>
+      {% endif %}
+
+      <!-- Input limpio para nueva portada -->
+      <input type="file" name="portada" class="form-control" accept="image/*" />
+
+      <!-- Archivo PDF justo debajo -->
+      <label for="id_archivo" class="form-label mt-3">Archivo PDF</label>
+      {% if libro.archivo %}
+      <small
+        >Archivo actual:
+        <a href="{{ libro.archivo.url }}" target="_blank"
+          >{{ libro.archivo.name|slice:"7:" }}</a
+        >
+      </small>
+      {% endif %}
+      <input type="file" name="archivo" class="form-control" accept=".pdf" />
+    </div>
+
+    <!-- Botón Guardar en nueva fila -->
+    <div class="col-12 mt-3">
+      <div class="row">
+        <div class="col-1">
+          <button type="submit" class="btn btn-primary w-100">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

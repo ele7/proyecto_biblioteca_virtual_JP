@@ -11,10 +11,11 @@
         id="nombre"
         name="nombre"
         required
+        style="width: 300px; padding: 8px"
       />
     </div>
     <button type="submit" class="btn btn-primary">Guardar</button>
-    <a href="{% url 'categorias_listar' %}" class="btn btn-secondary"
+    <a href="{% url 'library:categorias_listar' %}" class="btn btn-secondary"
       >Cancelar</a
     >
   </form>

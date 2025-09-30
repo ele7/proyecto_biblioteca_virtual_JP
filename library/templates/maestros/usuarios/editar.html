@@ -1,32 +1,72 @@
-{% extends "base.html" %}
-<!--  -->
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <h1>Editar Usuario</h1>
+
+{% if messages %} {% for message in messages %}
+<div
+  class="alert alert-{{ message.tags }} alert-dismissible fade show"
+  role="alert"
+>
+  {{ message }}
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close"
+  ></button>
+</div>
+{% endfor %} {% endif %}
+
 <form method="post">
-  {% csrf_token %}
-  <div class="mb-3">
-    <label>Usuario</label>
-    <input
-      type="text"
-      name="username"
-      value="{{ usuario.username }}"
-      class="form-control"
-    />
+  {% csrf_token %} {{ form.non_field_errors }}
+
+  <div class="mb-3" style="width: 500px; padding: 8px">
+    <label>Nombre</label>
+    {{ form.name }}
   </div>
-  <div class="mb-3">
+
+  <div class="mb-3" style="width: 500px; padding: 8px">
     <label>Email</label>
-    <input
-      type="email"
-      name="email"
-      value="{{ usuario.email }}"
-      class="form-control"
-    />
+    {{ form.email }}
   </div>
+
+  <div class="mb-3" style="width: 200px; padding: 8px">
+    <label>Rol</label>
+    {{ form.rol }}
+  </div>
+
+  <div class="mb-3" style="width: 300px; padding: 8px">
+    <label
+      >Contraseña {% if form.instance.pk %}(dejar vacío para no cambiar)
+      <!---->
+      {% endif%}</label
+    >
+    {{ form.password }}
+  </div>
+
   <div class="mb-3">
-    <label>Contraseña (dejar vacío para no cambiar)</label>
-    <input type="password" name="password" class="form-control" />
+    <label>Categorías Permitidas</label>
+    <div class="form-check">
+      {% for checkbox in form.categorias %}
+      <div class="form-check">
+        {{ checkbox.tag }}
+        <label class="form-check-label">{{ checkbox.choice_label }}</label>
+      </div>
+      {% endfor %}
+    </div>
   </div>
-  <button type="submit" class="btn btn-primary">Guardar</button>
-  <a href="{% url 'usuarios_listar' %}" class="btn btn-secondary">Cancelar</a>
+
+  <div class="mb-3 form-check">
+    {{ form.is_active }}
+    <label class="form-check-label">Activo</label>
+  </div>
+
+  <div class="mt-3">
+    <button type="submit" class="btn btn-primary">
+      {% if form.instance.pk %}Guardar{% else %}Crear{% endif %}
+    </button>
+    <a href="{% url 'library:usuarios_listar' %}" class="btn btn-secondary"
+      >Cancelar</a
+    >
+  </div>
 </form>
 {% endblock %}

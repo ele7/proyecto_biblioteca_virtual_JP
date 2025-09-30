@@ -1,0 +1,16 @@
+<li class="nav-item">
+  <form
+    method="POST"
+    action="{% url 'library:logout_view' %}"
+    style="display: inline"
+  >
+    {% csrf_token %}
+    <button
+      type="submit"
+      class="nav-link btn btn-link"
+      style="color: inherit; text-decoration: none; padding: 0"
+    >
+      Cerrar sesión
+    </button>
+  </form>
+</li>

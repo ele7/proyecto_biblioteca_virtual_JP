@@ -1,11 +1,21 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <title>{% block title %}Biblioteca Admin{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Biblioteca{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:," />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+    <!-- AdminLTE y FontAwesome via CDN -->
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css"
     />
     <link
       rel="stylesheet"
@@ -13,167 +23,359 @@
     />
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf_viewer.min.css"
+    />
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
     />
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
     />
-    {% block extra_css %}{% endblock %}
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css"
+    />
   </head>
 
-  <body class="hold-transition sidebar-mini">
-    <div class="wrapper">
-      {% if user.is_authenticated %}
-      <!-- Navbar -->
-      <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <ul class="navbar-nav">
-          <li class="nav-item">
-            <a class="nav-link" data-widget="pushmenu" href="#"
-              ><i class="fas fa-bars"></i
-            ></a>
-          </li>
-          <li class="nav-item d-none d-sm-inline-block">
-            <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
-          </li>
-        </ul>
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item">
-            <a href="{% url 'logout' %}" class="nav-link">Cerrar sesión</a>
-          </li>
-        </ul>
-      </nav>
+  <body class="hold-transition layout-top-nav">
+    <div class="container">
+      <div class="wrapper">
+        <!-- NAV SUPERIOR SIMPLIFICADO -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-2">
+          <div class="row w-100 align-items-center">
+            <!-- Logo y nombre -->
+            <div class="col-lg-4 col-md-4">
+              <a
+                class="navbar-brand d-flex align-items-center"
+                href="{% url 'library:dashboard' %}"
+              >
+                <span class="fs-5 text-white" style="padding: 20px"
+                  >Biblioteca Virtual</span
+                >
+              </a>
+            </div>
 
-      <!-- Sidebar -->
-      <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a href="#" class="brand-link">
-          <span class="brand-text font-weight-light">Biblioteca</span>
-        </a>
-        <div class="sidebar">
-          <nav class="mt-2">
-            <ul
-              class="nav nav-pills nav-sidebar flex-column"
-              data-widget="treeview"
+            <!-- Buscador -->
+            <div class="col-lg-5 col-md-5">
+              <form
+                class="d-flex"
+                method="GET"
+                action="{% url 'library:buscar_libro' %}"
+              >
+                <div class="input-group">
+                  <input
+                    class="form-control"
+                    type="search"
+                    name="q"
+                    placeholder="Buscar libro por título o autor..."
+                    aria-label="Buscar"
+                  />
+                  <button class="btn btn-success" type="submit">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Usuario -->
+            <div class="col-lg-3 col-md-3">
+              <div class="d-flex justify-content-end align-items-center">
+                {% if user.is_authenticated %}
+                <div class="dropdown">
+                  <button
+                    class="btn btn-outline-light btn-sm dropdown-toggle"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                  >
+                    <i class="fas fa-user-circle me-1"></i>
+                    {{ request.user.name|default:request.user.email }}
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="{% url 'library:user_profile' %}"
+                      >
+                        <i class="fas fa-user me-1"></i>Mi Perfil
+                      </a>
+                    </li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                      <form
+                        method="POST"
+                        action="{% url 'library:logout_view' %}"
+                        class="d-inline"
+                      >
+                        {% csrf_token %}
+                        <button type="submit" class="dropdown-item text-danger">
+                          <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
+                        </button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+                {% else %}
+                <a
+                  href="{% url 'library:login' %}"
+                  class="btn btn-outline-light btn-sm me-2"
+                >
+                  <i class="fas fa-sign-in-alt me-1"></i>Ingresar
+                </a>
+                <a href="#" class="btn btn-primary btn-sm">
+                  <i class="fas fa-user-plus me-1"></i>Registrarse
+                </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <!-- NAV ADMIN (solo para administradores) -->
+        {% if user.is_authenticated %}
+        <!---->
+        {% if user.rol.nombre == "ADMIN" %}
+        <nav class="navbar navbar-expand-xl navbar-dark bg-dark sticky-top">
+          <div class="container-fluid">
+            <!-- Botón hamburguesa para móvil -->
+            <button
+              class="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarAdmin"
             >
-              <li class="nav-item">
-                <a href="{% url 'dashboard' %}" class="nav-link">
-                  <i class="nav-icon fas fa-tachometer-alt"></i>
-                  <p>Dashboard</p>
-                </a>
-              </li>
+              <span class="navbar-toggler-icon"></span>
+            </button>
 
-              <!-- Registro Maestro -->
-              <li class="nav-item has-treeview">
-                <a href="#" class="nav-link">
-                  <i class="nav-icon fas fa-database"></i>
-                  <p>
-                    Registro Maestro <i class="right fas fa-angle-left"></i>
-                  </p>
-                </a>
+            <!-- Menú administración -->
+            <div
+              class="collapse navbar-collapse justify-content-center"
+              id="navbarAdmin"
+            >
+              <ul class="navbar-nav w-100 d-flex justify-content-around">
+                <!-- Inicio -->
+                <li class="nav-item">
+                  <a
+                    href="{% url 'library:dashboard' %}"
+                    class="nav-link text-white"
+                  >
+                    <i class="fas fa-home me-1"></i>Inicio
+                  </a>
+                </li>
 
                 <!-- Usuarios -->
-                <ul class="nav nav-treeview">
-                  <li class="nav-item has-treeview">
-                    <a href="#" class="nav-link">
-                      <i class="fas fa-users nav-icon"></i>
-                      <p>Usuarios <i class="right fas fa-angle-left"></i></p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                      <li class="nav-item">
-                        <a href="{% url 'usuarios_listar' %}" class="nav-link">
-                          <i class="far fa-circle nav-icon"></i>
-                          <p>Listado de Usuarios</p>
-                        </a>
-                      </li>
-                      <li class="nav-item">
-                        <a href="{% url 'usuarios_crear' %}" class="nav-link">
-                          <i class="far fa-circle nav-icon"></i>
-                          <p>Crear Usuario</p>
-                        </a>
-                      </li>
-                      <li class="nav-item">
-                        <a href="{% url 'usuarios_listar' %}" class="nav-link">
-                          <i class="far fa-circle nav-icon"></i>
-                          <p>Modificar Usuario</p>
-                        </a>
-                      </li>
-                    </ul>
-                  </li>
-                </ul>
+                <li class="nav-item dropdown">
+                  <a
+                    class="nav-link dropdown-toggle text-white"
+                    href="#"
+                    id="usuariosDropdown"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                  >
+                    <i class="fas fa-users me-1"></i>Usuarios
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-dark">
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="{% url 'library:usuarios_crear' %}"
+                      >
+                        <i class="fas fa-user-plus me-1"></i>Crear Usuario
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="{% url 'library:usuarios_listar' %}"
+                      >
+                        <i class="fas fa-list me-1"></i>Listado de Usuarios
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+
+                <!-- Categorías -->
+                <li class="nav-item dropdown">
+                  <a
+                    class="nav-link dropdown-toggle text-white"
+                    href="#"
+                    id="categoriasDropdown"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                  >
+                    <i class="fas fa-tags me-1"></i>Categorías
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-dark">
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="{% url 'library:categorias_crear' %}"
+                      >
+                        <i class="fas fa-plus me-1"></i>Agregar Categoría
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="{% url 'library:categorias_listar' %}"
+                      >
+                        <i class="fas fa-list me-1"></i>Listado de Categorías
+                      </a>
+                    </li>
+                  </ul>
+                </li>
 
                 <!-- Libros -->
-                <ul class="nav nav-treeview">
-                  <li class="nav-item has-treeview">
-                    <a href="#" class="nav-link">
-                      <i class="fas fa-book nav-icon"></i>
-                      <p>Libros <i class="right fas fa-angle-left"></i></p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                      <li class="nav-item">
-                        <a
-                          href="{% url 'categorias_listar' %}"
-                          class="nav-link"
-                        >
-                          <i class="far fa-circle nav-icon"></i>
-                          <p>Listado de Categorias</p>
-                        </a>
-                      </li>
-                      <li class="nav-item">
-                        <a href="{% url 'categorias_crear' %}" class="nav-link">
-                          <i class="far fa-circle nav-icon"></i>
-                          <p>Crear Categoria</p>
-                        </a>
-                      </li>
-                      <li class="nav-item">
-                        <a
-                          href="{% url 'categorias_listar' %}"
-                          class="nav-link"
-                        >
-                          <i class="far fa-circle nav-icon"></i>
-                          <p>Modificar Categoria</p>
-                        </a>
-                      </li>
-                    </ul>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </aside>
-
-      <!-- Content Wrapper -->
-      <div class="content-wrapper">
-        <section class="content pt-3">
-          <div class="container-fluid">{% block content %}{% endblock %}</div>
-        </section>
-      </div>
-
-      <footer class="main-footer">
-        <strong>&copy; 2025 Biblioteca Digital.</strong> Todos los derechos
-        reservados.
-      </footer>
-
-      {% else %}
-      <!-- Página de login centrada -->
-      {% comment %}
-      <div class="login-box">
-        <div class="login-logo">
-          <a href="#"><b>Biblioteca</b> Digital</a>
-        </div>
-        <div class="card">
-          <div class="card-body login-card-body">
-            {% block content %}{% endblock %}
+                <li class="nav-item dropdown">
+                  <a
+                    class="nav-link dropdown-toggle text-white"
+                    href="#"
+                    id="librosDropdown"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                  >
+                    <i class="fas fa-book me-1"></i>Libros
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-dark">
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="{% url 'library:agregar_libro' %}"
+                      >
+                        <i class="fas fa-plus me-1"></i>Agregar Libro
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="{% url 'library:listar_libros' %}"
+                      >
+                        <i class="fas fa-list me-1"></i>Listado de Libros
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
           </div>
+        </nav>
+        {% endif %}
+        <!---->
+        {% endif %}
+
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
+          <section class="content pt-3">
+            {% if request.path == '/dashboard/' %}
+            <!-- Banner principal simple -->
+            <img
+              src="{% static 'img/logo_a.jpg' %}"
+              class="img-fluid w-100"
+              alt="Banner principal Biblioteca Virtual"
+            />
+
+            <!-- Samurai Banner ajustado -->
+            <div class="samurai-banner-wrapper row g-3 mt-3">
+              <!-- Columna 1 -->
+              <div class="col-12 col-md-6 col-xl-4">
+                <div class="banner-t11-item">
+                  <div
+                    class="banner-t11-imagen"
+                    style="
+                      background-image: url('https://clcchile.com/images/original/categoria-libros.jpg');
+                    "
+                  ></div>
+                  <div
+                    class="banner-t11-content d-flex flex-column align-items-start justify-content-end"
+                  >
+                    <h3 class="samurai-text">Libros</h3>
+                    <a
+                      href="/esp/libros"
+                      class="sm-btn sm-btn-secondary stretched-link"
+                      >Ver más</a
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Columna 2 -->
+              <div class="col-12 col-md-6 col-xl-4">
+                <div class="banner-t11-item">
+                  <div
+                    class="banner-t11-imagen"
+                    style="
+                      background-image: url('https://clcchile.com/images/original/22884130767-f3b6d8c3e2-o.jpg');
+                    "
+                  ></div>
+                  <div
+                    class="banner-t11-content d-flex flex-column align-items-start justify-content-end"
+                  >
+                    <h3 class="samurai-text">Biblias</h3>
+                    <a
+                      href="/esp/biblias"
+                      class="sm-btn sm-btn-secondary stretched-link"
+                      >Ver más</a
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Columna 3 -->
+              <div class="col-12 col-md-6 col-xl-4">
+                <div class="banner-t11-item">
+                  <div
+                    class="banner-t11-imagen"
+                    style="
+                      background-image: url('https://clcchile.com/images/original/long-row-colorful-books.jpg');
+                    "
+                  ></div>
+                  <div
+                    class="banner-t11-content d-flex flex-column align-items-start justify-content-end"
+                  >
+                    <h3 class="samurai-text">Promociones</h3>
+                    <a
+                      href="https://www.clcchile.com/esp/promociones"
+                      class="sm-btn sm-btn-secondary stretched-link"
+                      >Ver Más</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- BLOQUE CONTENT PRINCIPAL -->
+            {% block content %} {% endblock %}
+          </section>
         </div>
       </div>
-      {% endcomment %} {% endif %}
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
-    {% block scripts %}{% endblock %}
+    <!-- Footer -->
+    <footer class="main-footer text-center">
+      <strong>&copy; 2025 Biblioteca Digital.</strong> Creado por Eleazar
+      Pereira
+    </footer>
+
+    <!-- Scripts -->
+    <!-- jQuery primero-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf_viewer.min.js"></script>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Swiper -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+
+    <!-- AdminLTE -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+
+    <!-- Tu script personalizado -->
+    <script src="{% static 'js/script.js' %}"></script>
   </body>
 </html>
