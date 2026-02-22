@@ -1,54 +1,72 @@
 {% extends "base.html" %}
-<!---->
+{% block title %}Agregar Libro{% endblock %}
+
 {% block content %}
-<h1>Agregar Libro</h1>
+<div class="max-w-3xl mx-auto space-y-6">
 
-{% if messages %} {% for message in messages %}
-<div
-  class="alert alert-{{ message.tags }} alert-dismissible fade show"
-  role="alert"
->
-  {{ message }}
-  <button
-    type="button"
-    class="btn-close"
-    data-bs-dismiss="alert"
-    aria-label="Close"
-  ></button>
+  <h1 class="font-serif text-navy text-2xl font-bold">Agregar Libro</h1>
+
+  {% if messages %}
+  {% for message in messages %}
+  <div class="{% if 'error' in message.tags %}bg-red-50 border-red-100 text-red-700{% else %}bg-green-50 border-green-100 text-green-700{% endif %} border rounded-lg px-4 py-3 text-sm font-medium flex items-center gap-2">
+    <i class="fas {% if 'error' in message.tags %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} shrink-0"></i>
+    {{ message }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 p-6">
+    <form method="POST" enctype="multipart/form-data" class="space-y-5">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="space-y-1">
+          {{ form.titulo.label_tag }}
+          {{ form.titulo }}
+        </div>
+        <div class="space-y-1">
+          {{ form.autor.label_tag }}
+          {{ form.autor }}
+        </div>
+        <div class="space-y-1">
+          {{ form.año.label_tag }}
+          {{ form.año }}
+        </div>
+        <div class="space-y-1">
+          {{ form.categoria.label_tag }}
+          {{ form.categoria }}
+        </div>
+      </div>
+
+      <div class="space-y-1">
+        {{ form.descripcion.label_tag }}
+        {{ form.descripcion }}
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="space-y-1">
+          {{ form.portada.label_tag }}
+          {{ form.portada }}
+        </div>
+        <div class="space-y-1">
+          {{ form.archivo.label_tag }}
+          {{ form.archivo }}
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <button type="submit"
+                class="inline-flex items-center gap-2 bg-navy hover:bg-navy-light text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+          <i class="fas fa-plus"></i> Agregar Libro
+        </button>
+        <a href="{% url 'library:listar_libros' %}"
+           class="inline-flex items-center gap-2 border border-stone-200 text-navy text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-navy hover:text-white hover:border-navy transition-colors"
+           style="text-decoration:none">
+          Cancelar
+        </a>
+      </div>
+    </form>
+  </div>
+
 </div>
-{% endfor %} {% endif %}
-
-<form method="POST" enctype="multipart/form-data" class="row g-3">
-  {% csrf_token %}
-
-  <!-- Título y Autor -->
-  <div class="col-12 col-md-6">
-    {{ form.titulo.label_tag }} {{ form.titulo }}
-  </div>
-  <div class="col-12 col-md-6">{{ form.autor.label_tag }} {{ form.autor }}</div>
-
-  <!-- Año y Categoría -->
-  <div class="col-8 col-md-4">{{ form.año.label_tag }} {{ form.año }}</div>
-  <div class="col-8 col-md-4">
-    {{ form.categoria.label_tag }} {{ form.categoria }}
-  </div>
-
-  <!-- Descripción -->
-  <div class="col-10">
-    {{ form.descripcion.label_tag }} {{ form.descripcion }}
-  </div>
-
-  <!-- Portada y Archivo -->
-  <div class="col-10 col-md-5">
-    {{ form.portada.label_tag }} {{ form.portada }}
-  </div>
-  <div class="col-10 col-md-5">
-    {{ form.archivo.label_tag }} {{ form.archivo }}
-  </div>
-
-  <!-- Botón enviar -->
-  <div class="col-3">
-    <button type="submit" class="btn btn-primary w-100">Agregar Libro</button>
-  </div>
-</form>
 {% endblock %}

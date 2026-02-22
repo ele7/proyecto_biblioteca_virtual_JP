@@ -1,77 +1,128 @@
-{% extends 'base.html' %} {% block content %}
-<div class="container mt-4">
-  <h1>{{ libro.titulo }}</h1>
-  <p><strong>Autor:</strong> {{ libro.autor }}</p>
+{% extends 'base.html' %}
+{% block title %}{{ libro.titulo }} — Lector PDF{% endblock %}
 
-  {% if libro.archivo %}
-  <div class="pdf-controls mb-2">
-    <button id="prev-page" class="btn btn-sm btn-primary">← Anterior</button>
-    <span
-      >Página: <span id="page-num">1</span> /
-      <span id="page-count">1</span></span
-    >
-    <button id="next-page" class="btn btn-sm btn-primary">Siguiente →</button>
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-4">
+
+  {# Encabezado #}
+  <div class="flex items-start justify-between gap-4 flex-wrap">
+    <div>
+      <h1 class="font-serif text-navy text-2xl font-bold">{{ libro.titulo }}</h1>
+      <p class="text-gray-400 text-sm">
+        por <span class="text-navy/70 font-medium">{{ libro.autor }}</span>
+      </p>
+    </div>
+    <a href="{% url 'library:libros_por_categoria' libro.categoria.id %}"
+       class="inline-flex items-center gap-2 border border-stone-200 text-navy text-sm font-medium px-3.5 py-2 rounded-full hover:bg-navy hover:text-white hover:border-navy transition-colors shrink-0"
+       style="text-decoration:none">
+      <i class="fas fa-arrow-left text-xs"></i> Volver a {{ libro.categoria.nombre }}
+    </a>
   </div>
 
-  <canvas id="pdf-render" style="border: 1px solid #ccc; width: 100%"></canvas>
+  {% if libro.archivo %}
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.min.js"></script>
-  <script>
-    const url = "{{ libro.archivo.url }}";
-    const pdfjsLib = window["pdfjs-dist/build/pdf"];
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.worker.min.js";
+  {# Controles del lector #}
+  <div class="flex items-center justify-center gap-3 bg-white rounded-xl shadow-bv-sm border border-stone-100 px-5 py-3 flex-wrap">
+    <button id="prev-page"
+            class="inline-flex items-center gap-1.5 border border-stone-200 text-navy text-sm font-medium px-4 py-2 rounded-lg hover:bg-navy hover:text-white hover:border-navy transition-colors">
+      <i class="fas fa-chevron-left text-xs"></i> Anterior
+    </button>
+    <span class="text-sm text-gray-500 select-none">
+      Página <span id="page-num" class="font-semibold text-navy">1</span>
+      de <span id="page-count" class="font-semibold text-navy">1</span>
+    </span>
+    <button id="next-page"
+            class="inline-flex items-center gap-1.5 border border-stone-200 text-navy text-sm font-medium px-4 py-2 rounded-lg hover:bg-navy hover:text-white hover:border-navy transition-colors">
+      Siguiente <i class="fas fa-chevron-right text-xs"></i>
+    </button>
+    {# Indicador de progreso guardado #}
+    <span id="save-indicator" class="text-xs text-gray-300 hidden">
+      <i class="fas fa-cloud-upload-alt mr-1"></i> Guardado
+    </span>
+  </div>
 
-    let pdfDoc = null,
-      pageNum = 1,
-      scale = 1.2,
-      canvas = document.getElementById("pdf-render"),
-      ctx = canvas.getContext("2d");
-
-    function renderPage(num) {
-      pdfDoc.getPage(num).then((page) => {
-        const viewport = page.getViewport({ scale: scale });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        const renderCtx = {
-          canvasContext: ctx,
-          viewport: viewport,
-        };
-        page.render(renderCtx);
-
-        document.getElementById("page-num").textContent = num;
-      });
-    }
-
-    pdfjsLib.getDocument(url).promise.then((pdf) => {
-      pdfDoc = pdf;
-      document.getElementById("page-count").textContent = pdfDoc.numPages;
-      renderPage(pageNum);
-    });
-
-    document.getElementById("prev-page").addEventListener("click", () => {
-      if (pageNum <= 1) return;
-      pageNum--;
-      renderPage(pageNum);
-    });
-
-    document.getElementById("next-page").addEventListener("click", () => {
-      if (pageNum >= pdfDoc.numPages) return;
-      pageNum++;
-      renderPage(pageNum);
-    });
-  </script>
+  {# Canvas del PDF #}
+  <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 overflow-hidden flex justify-center p-4">
+    <canvas id="pdf-render" class="max-w-full rounded"></canvas>
+  </div>
 
   {% else %}
-  <p>No hay archivo PDF disponible.</p>
+
+  <div class="bg-amber-50 border border-amber-100 rounded-xl px-5 py-10 text-center">
+    <i class="fas fa-file-pdf text-3xl text-amber-200 mb-3 block"></i>
+    <p class="text-amber-700 font-medium">No hay archivo PDF disponible para este libro.</p>
+  </div>
+
   {% endif %}
 
-  <a
-    href="{% url 'library:libros_por_categoria' libro.categoria.id %}"
-    class="btn btn-secondary mt-3"
-  >
-    ← Volver a {{ libro.categoria.nombre }}
-  </a>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if libro.archivo %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.min.js"></script>
+<script>
+  const url = "{{ libro.archivo.url }}";
+  const pdfjsLib = window["pdfjs-dist/build/pdf"];
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.worker.min.js";
+
+  const LIBRO_ID    = {{ libro.id }};
+  const CSRF_TOKEN  = '{{ csrf_token }}';
+  const PROGRESO_URL = '{% url "library:guardar_progreso" %}';
+
+  let pdfDoc = null,
+    pageNum = {{ ultima_pagina_guardada|default:1 }},
+    scale = 1.5,
+    canvas = document.getElementById("pdf-render"),
+    ctx = canvas.getContext("2d"),
+    _saveTimer = null;
+
+  function guardarProgreso(num, total) {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(() => {
+      fetch(PROGRESO_URL, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRF_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ libro_id: LIBRO_ID, ultima_pagina: num, total_paginas: total }),
+      }).then(() => {
+        const ind = document.getElementById('save-indicator');
+        ind.classList.remove('hidden');
+        setTimeout(() => ind.classList.add('hidden'), 2000);
+      }).catch(() => {});
+    }, 1500);
+  }
+
+  function renderPage(num) {
+    pdfDoc.getPage(num).then((page) => {
+      const viewport = page.getViewport({ scale });
+      canvas.height = viewport.height;
+      canvas.width  = viewport.width;
+      page.render({ canvasContext: ctx, viewport });
+      document.getElementById("page-num").textContent = num;
+      guardarProgreso(num, pdfDoc.numPages);
+    });
+  }
+
+  pdfjsLib.getDocument(url).promise.then((pdf) => {
+    pdfDoc = pdf;
+    document.getElementById("page-count").textContent = pdfDoc.numPages;
+    // Asegurar que la página guardada sea válida
+    if (pageNum > pdfDoc.numPages) pageNum = 1;
+    renderPage(pageNum);
+  });
+
+  document.getElementById("prev-page").addEventListener("click", () => {
+    if (pageNum <= 1) return;
+    pageNum--;
+    renderPage(pageNum);
+  });
+
+  document.getElementById("next-page").addEventListener("click", () => {
+    if (pageNum >= pdfDoc.numPages) return;
+    pageNum++;
+    renderPage(pageNum);
+  });
+</script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Mis Favoritos{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 bg-navy rounded-xl flex items-center justify-center text-white shrink-0">
+      <i class="fas fa-heart"></i>
+    </div>
+    <div>
+      <h1 class="font-serif text-navy text-2xl font-bold leading-tight">Mis Favoritos</h1>
+      <p class="text-xs text-gray-400 mt-0.5">Libros que has marcado como favoritos</p>
+    </div>
+  </div>
+
+  {% if favoritos %}
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+    {% for fav in favoritos %}
+    <a href="{% url 'library:detalle_libros' fav.libro.id %}"
+       class="group bg-white rounded-xl shadow-bv-sm border border-stone-100 overflow-hidden hover:shadow-bv-md hover:-translate-y-1 transition-all duration-300 flex flex-col"
+       style="text-decoration:none">
+      <div class="relative overflow-hidden h-44 bg-cream">
+        {% if fav.libro.portada %}
+        <img src="{{ fav.libro.portada.url }}" alt="{{ fav.libro.titulo }}"
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+        {% else %}
+        <div class="w-full h-full flex flex-col items-center justify-center text-navy/20">
+          <i class="fas fa-book text-4xl mb-1"></i>
+          <span class="text-xs">Sin portada</span>
+        </div>
+        {% endif %}
+        <div class="absolute top-2 right-2 w-7 h-7 bg-red-500 rounded-full flex items-center justify-center shadow">
+          <i class="fas fa-heart text-white text-xs"></i>
+        </div>
+      </div>
+      <div class="p-3.5 flex flex-col flex-1">
+        <h5 class="font-serif text-navy text-sm font-semibold line-clamp-2 mb-1">{{ fav.libro.titulo }}</h5>
+        <p class="text-gray-400 text-xs mb-0.5">{{ fav.libro.autor }}</p>
+        <p class="text-gray-300 text-xs">{{ fav.libro.año }}</p>
+        <div class="mt-auto flex items-center justify-between pt-2">
+          <span class="inline-block bg-cream text-navy/60 text-[0.68rem] font-medium px-2 py-0.5 rounded-full">
+            {{ fav.libro.categoria.nombre }}
+          </span>
+          <span class="text-[0.65rem] text-gray-300">{{ fav.fecha_agregado|date:"d/m/Y" }}</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="bg-white rounded-xl border border-stone-100 shadow-bv-sm p-12 text-center">
+    <i class="fas fa-heart-broken text-5xl text-gray-200 mb-4 block"></i>
+    <h4 class="font-serif text-navy text-lg mb-2">Aún no tienes favoritos</h4>
+    <p class="text-gray-400 text-sm mb-5">Marca libros con el corazón para encontrarlos fácilmente aquí.</p>
+    <a href="{% url 'library:dashboard' %}"
+       class="inline-flex items-center gap-2 bg-navy hover:bg-navy-light text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+       style="text-decoration:none">
+      <i class="fas fa-book-open text-xs"></i> Explorar biblioteca
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

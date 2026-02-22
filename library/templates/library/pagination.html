@@ -1,42 +1,33 @@
+{# Componente de paginación reutilizable — reemplaza .pagination Bootstrap #}
+{# Variables requeridas: page_obj (Page), page_param (string) #}
 {% if page_obj.has_other_pages %}
-<div class="mt-4">
-  <nav aria-label="Page navigation">
-    <ul class="pagination justify-content-center">
-      {% if page_obj.has_previous %}
-      <li class="page-item">
-        <a
-          class="page-link"
-          href="?{{ page_param }}={{ page_obj.previous_page_number }}"
-          >Anterior</a
-        >
-      </li>
-      {% else %}
-      <li class="page-item disabled">
-        <span class="page-link">Anterior</span>
-      </li>
-      {% endif %} {% for num in page_obj.paginator.page_range %} {% if
-      page_obj.number == num %}
-      <li class="page-item active">
-        <span class="page-link">{{ num }}</span>
-      </li>
-      {% else %}
-      <li class="page-item">
-        <a class="page-link" href="?{{ page_param }}={{ num }}">{{ num }}</a>
-      </li>
-      {% endif %} {% endfor %} {% if page_obj.has_next %}
-      <li class="page-item">
-        <a
-          class="page-link"
-          href="?{{ page_param }}={{ page_obj.next_page_number }}"
-          >Siguiente</a
-        >
-      </li>
-      {% else %}
-      <li class="page-item disabled">
-        <span class="page-link">Siguiente</span>
-      </li>
-      {% endif %}
-    </ul>
-  </nav>
-</div>
+<nav aria-label="Paginación" class="flex justify-center mt-6 gap-1 flex-wrap">
+
+  {% if page_obj.has_previous %}
+  <a href="?{{ page_param }}={{ page_obj.previous_page_number }}"
+     class="px-3.5 py-1.5 text-xs border border-stone-200 rounded-lg text-navy hover:bg-navy hover:text-white transition-colors"
+     style="text-decoration:none">← Anterior</a>
+  {% else %}
+  <span class="px-3.5 py-1.5 text-xs border border-stone-100 rounded-lg text-gray-300 cursor-not-allowed">← Anterior</span>
+  {% endif %}
+
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+    <span class="px-3.5 py-1.5 text-xs bg-navy text-white border border-navy rounded-lg font-semibold">{{ num }}</span>
+    {% else %}
+    <a href="?{{ page_param }}={{ num }}"
+       class="px-3.5 py-1.5 text-xs border border-stone-200 rounded-lg text-navy hover:bg-navy hover:text-white transition-colors"
+       style="text-decoration:none">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+  <a href="?{{ page_param }}={{ page_obj.next_page_number }}"
+     class="px-3.5 py-1.5 text-xs border border-stone-200 rounded-lg text-navy hover:bg-navy hover:text-white transition-colors"
+     style="text-decoration:none">Siguiente →</a>
+  {% else %}
+  <span class="px-3.5 py-1.5 text-xs border border-stone-100 rounded-lg text-gray-300 cursor-not-allowed">Siguiente →</span>
+  {% endif %}
+
+</nav>
 {% endif %}

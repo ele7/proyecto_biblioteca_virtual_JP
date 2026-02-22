@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nuevo libro disponible — {{ titulo }}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F0EDE6;font-family:Georgia,'Times New Roman',serif;">
+
+  <!-- Wrapper -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F0EDE6;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color:#152B47;border-radius:12px 12px 0 0;padding:28px 36px;text-align:center;">
+              <span style="display:inline-block;background-color:rgba(200,169,81,0.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+                <span style="color:#C8A951;font-size:22px;">&#128218;</span>
+              </span>
+              <p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:bold;color:#C8A951;letter-spacing:0.5px;">
+                Biblioteca Virtual
+              </p>
+              <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.55);letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">
+                Pozo de Jacob
+              </p>
+            </td>
+          </tr>
+
+          <!-- Banner nuevo libro -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#1E3A5F,#2B4F7F);padding:20px 36px;">
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding-right:12px;vertical-align:middle;">
+                    <div style="width:36px;height:36px;background-color:rgba(200,169,81,0.2);border-radius:8px;text-align:center;line-height:36px;">
+                      <span style="color:#C8A951;font-size:18px;">&#128276;</span>
+                    </div>
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <p style="margin:0;font-size:11px;color:rgba(200,169,81,0.7);text-transform:uppercase;letter-spacing:2px;font-family:Arial,sans-serif;">Nuevo recurso disponible</p>
+                    <p style="margin:2px 0 0;font-size:14px;color:#ffffff;font-weight:bold;font-family:Arial,sans-serif;">Un libro fue agregado a tu categoría</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background-color:#ffffff;padding:36px 36px 28px;">
+
+              <p style="margin:0 0 20px;font-size:15px;color:#555555;line-height:1.7;font-family:Arial,sans-serif;">
+                Hola <strong>{{ nombre }}</strong>, hay un nuevo libro disponible en la categoría
+                <strong style="color:#152B47;">{{ categoria }}</strong> a la que tienes acceso:
+              </p>
+
+              <!-- Tarjeta del libro -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F8F5EE;border-radius:10px;border:1px solid #E8E0D0;margin-bottom:28px;">
+                <tr>
+                  <td style="padding:8px 0 0;text-align:center;">
+                    <!-- Ícono de libro decorativo -->
+                    <div style="display:inline-block;width:56px;height:56px;background-color:#152B47;border-radius:50%;text-align:center;line-height:56px;margin-top:8px;">
+                      <span style="color:#C8A951;font-size:24px;">&#128218;</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:16px 24px 8px;text-align:center;">
+                    <!-- Categoría badge -->
+                    <span style="display:inline-block;background-color:rgba(200,169,81,0.15);color:#9B7C2A;font-size:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;padding:4px 12px;border-radius:50px;font-family:Arial,sans-serif;">
+                      {{ categoria }}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 24px 6px;text-align:center;">
+                    <h2 style="margin:0;font-family:Georgia,serif;font-size:21px;color:#152B47;line-height:1.3;">
+                      {{ titulo }}
+                    </h2>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 24px 4px;text-align:center;">
+                    <p style="margin:0;font-size:14px;color:#777777;font-family:Arial,sans-serif;">
+                      por <strong>{{ autor }}</strong>
+                    </p>
+                  </td>
+                </tr>
+                {% if año %}
+                <tr>
+                  <td style="padding:4px 24px 8px;text-align:center;">
+                    <p style="margin:0;font-size:13px;color:#aaaaaa;font-family:Arial,sans-serif;">{{ año }}</p>
+                  </td>
+                </tr>
+                {% endif %}
+                {% if descripcion %}
+                <tr>
+                  <td style="padding:12px 24px 20px;">
+                    <div style="height:1px;background-color:#E8E0D0;margin-bottom:16px;"></div>
+                    <p style="margin:0;font-size:14px;color:#666666;line-height:1.7;font-family:Arial,sans-serif;text-align:center;font-style:italic;">
+                      &ldquo;{{ descripcion }}&rdquo;
+                    </p>
+                  </td>
+                </tr>
+                {% else %}
+                <tr><td style="padding-bottom:20px;"></td></tr>
+                {% endif %}
+              </table>
+
+              <!-- Botón CTA -->
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background-color:#C8A951;border-radius:50px;padding:0;">
+                    <a href="{{ libro_url }}"
+                       style="display:inline-block;padding:13px 32px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#152B47;text-decoration:none;letter-spacing:0.5px;">
+                      Ver libro &#8594;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Versículo decorativo -->
+          <tr>
+            <td style="background-color:#F8F5EE;padding:20px 36px;border-top:1px solid #E8E0D0;">
+              <p style="margin:0;font-size:13px;font-style:italic;color:#888888;line-height:1.6;font-family:Georgia,serif;text-align:center;">
+                &ldquo;La Palabra de Dios es viva y eficaz.&rdquo;
+              </p>
+              <p style="margin:6px 0 0;font-size:12px;color:#C8A951;text-align:center;font-family:Arial,sans-serif;">
+                — Hebreos 4:12
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#152B47;border-radius:0 0 12px 12px;padding:20px 36px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.45);font-family:Arial,sans-serif;">
+                &copy; {% now "Y" %} <strong style="color:#C8A951;">Biblioteca Virtual</strong> &mdash; Pozo de Jacob
+              </p>
+              <p style="margin:6px 0 0;font-size:11px;color:rgba(255,255,255,0.3);font-family:Arial,sans-serif;">
+                Recibes este correo porque tienes acceso a la categoría <strong style="color:rgba(255,255,255,0.45);">{{ categoria }}</strong>.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

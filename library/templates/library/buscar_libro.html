@@ -1,76 +1,155 @@
-{% extends "base.html" %} {% load static %}
-<!---->
-{% block title %}Buscar Libros{% endblock %}
-<!---->
-{% block content %}
-<div class="container mt-4">
-  <div class="row">
-    <div class="col-12">
-      <h1>Buscar Libros</h1>
+{% extends "base.html" %}
+{% load static %}
 
-      <!-- Formulario de búsqueda -->
-      <form method="GET" class="mb-4">
-        <div class="input-group">
-          <input
-            type="search"
-            name="q"
-            class="form-control"
-            placeholder="Buscar libro por título o autor..."
-            value="{{ query }}"
-            aria-label="Buscar"
-          />
-          <button class="btn btn-success" type="submit">
-            <i class="fas fa-search me-1"></i>Buscar
+{% block title %}Buscar Libros{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+  <h1 class="font-serif text-navy text-2xl font-bold">Buscar Libros</h1>
+
+  {# Barra de búsqueda principal #}
+  <form method="GET" class="flex gap-2">
+    <div class="flex flex-1 rounded-xl overflow-hidden border border-stone-200 focus-within:border-navy transition-colors">
+      <input type="search" name="q" placeholder="Buscar libro por título o autor..."
+             value="{{ query }}" aria-label="Buscar"
+             class="flex-1 px-4 py-2.5 text-sm focus:outline-none bg-white" />
+    </div>
+    {# Preservar filtros activos al buscar #}
+    {% if filtros.categoria_id %}<input type="hidden" name="categoria" value="{{ filtros.categoria_id }}">{% endif %}
+    {% if filtros.year_desde %}<input type="hidden" name="year_desde" value="{{ filtros.year_desde }}">{% endif %}
+    {% if filtros.year_hasta %}<input type="hidden" name="year_hasta" value="{{ filtros.year_hasta }}">{% endif %}
+    {% if filtros.orden %}<input type="hidden" name="orden" value="{{ filtros.orden }}">{% endif %}
+    <button type="submit"
+            class="inline-flex items-center gap-2 bg-navy hover:bg-navy-light text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+      <i class="fas fa-search"></i> Buscar
+    </button>
+  </form>
+
+  {# Layout dos columnas: sidebar filtros + resultados #}
+  <div class="flex gap-6 items-start">
+
+    {# Sidebar de filtros #}
+    <aside class="w-56 shrink-0 space-y-4">
+      <form method="GET" class="space-y-4">
+        {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+
+        <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 p-4 space-y-4">
+          <h3 class="text-xs font-bold text-navy uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fas fa-filter text-gold"></i> Filtros
+          </h3>
+
+          {# Categoría #}
+          {% if categorias_disponibles %}
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-gray-500">Categoría</label>
+            <select name="categoria"
+                    class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-2 focus:outline-none focus:border-navy">
+              <option value="">Todas</option>
+              {% for cat in categorias_disponibles %}
+              <option value="{{ cat.id }}" {% if filtros.categoria_id == cat.id|stringformat:"s" %}selected{% endif %}>
+                {{ cat.nombre }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          {# Año desde / hasta #}
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-gray-500">Año desde</label>
+            <input type="number" name="year_desde" value="{{ filtros.year_desde }}"
+                   placeholder="ej. 1990" min="1000" max="2100"
+                   class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-2 focus:outline-none focus:border-navy" />
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-gray-500">Año hasta</label>
+            <input type="number" name="year_hasta" value="{{ filtros.year_hasta }}"
+                   placeholder="ej. 2024" min="1000" max="2100"
+                   class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-2 focus:outline-none focus:border-navy" />
+          </div>
+
+          {# Ordenar por #}
+          <div class="space-y-1">
+            <label class="text-xs font-medium text-gray-500">Ordenar por</label>
+            <select name="orden"
+                    class="w-full text-sm border border-stone-200 rounded-lg px-2.5 py-2 focus:outline-none focus:border-navy">
+              <option value="az"      {% if filtros.orden == 'az' %}selected{% endif %}>A → Z</option>
+              <option value="za"      {% if filtros.orden == 'za' %}selected{% endif %}>Z → A</option>
+              <option value="reciente"{% if filtros.orden == 'reciente' %}selected{% endif %}>Más reciente</option>
+              <option value="antiguo" {% if filtros.orden == 'antiguo' %}selected{% endif %}>Más antiguo</option>
+            </select>
+          </div>
+
+          <button type="submit"
+                  class="w-full inline-flex items-center justify-center gap-1.5 bg-navy hover:bg-navy-light text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors">
+            <i class="fas fa-search text-[10px]"></i> Aplicar filtros
           </button>
+
+          {% if filtros.categoria_id or filtros.year_desde or filtros.year_hasta %}
+          <a href="{% url 'library:buscar_libro' %}{% if query %}?q={{ query }}{% endif %}"
+             class="block text-center text-xs text-navy/50 hover:text-navy transition-colors"
+             style="text-decoration:none">
+            <i class="fas fa-times mr-1"></i> Limpiar filtros
+          </a>
+          {% endif %}
         </div>
       </form>
+    </aside>
 
-      <!-- Resultados -->
-      {% if query %}
-      <div class="alert alert-info">
-        {% if resultados_count > 0 %} Se encontraron {{ resultados_count }}
-        resultado{{ resultados_count|pluralize }} para "{{ query }}" {% else %}
-        No se encontraron resultados para "{{ query }}" {% endif %}
+    {# Resultados #}
+    <div class="flex-1 min-w-0 space-y-4">
+
+      {% if query or filtros.categoria_id or filtros.year_desde or filtros.year_hasta %}
+      <div class="{% if resultados_count > 0 %}bg-blue-50 border-blue-100 text-blue-800{% else %}bg-amber-50 border-amber-100 text-amber-800{% endif %} border rounded-lg px-4 py-3 text-sm font-medium flex items-center gap-2">
+        {% if resultados_count > 0 %}
+        <i class="fas fa-check-circle shrink-0"></i>
+        <strong>{{ resultados_count }}</strong> resultado{{ resultados_count|pluralize }}
+        {% if query %}para "<em>{{ query }}</em>"{% endif %}
+        {% else %}
+        <i class="fas fa-exclamation-triangle shrink-0"></i>
+        No se encontraron resultados{% if query %} para "<em>{{ query }}</em>"{% endif %}
+        {% endif %}
       </div>
+      {% endif %}
 
       {% if resultados_count > 0 %}
-      <div class="row">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {% for libro in libros %}
-        <div class="col-md-4 col-lg-3 mb-4">
-          <a
-            href="{% url 'library:detalle_libros' libro.id %}"
-            class="text-decoration-none"
-          >
-            <div class="card h-100 shadow-sm libro-card-categoria">
-              {% if libro.portada %}
-              <img
-                src="{{ libro.portada.url }}"
-                class="card-img-top libro-imagen-categoria"
-                alt="{{ libro.titulo }}"
-              />
-              {% else %}
-              <div class="card-img-top libro-imagen-placeholder-categoria">
-                <i class="fas fa-book fa-3x"></i>
-              </div>
-              {% endif %}
-              <div class="card-body d-flex flex-column">
-                <h5 class="card-title text-dark libro-titulo-categoria">
-                  {{ libro.titulo }}
-                </h5>
-                <p class="card-text text-muted libro-autor-categoria">
-                  <small>{{ libro.autor }}</small>
-                </p>
-                <p class="card-text libro-año-categoria mt-auto">
-                  <small class="text-muted">{{ libro.año }}</small>
-                </p>
-              </div>
+        <a href="{% url 'library:detalle_libros' libro.id %}"
+           class="group bg-white rounded-xl shadow-bv-sm border border-stone-100 overflow-hidden hover:shadow-bv-md hover:-translate-y-1 transition-all duration-300 flex flex-col"
+           style="text-decoration:none">
+          <div class="relative overflow-hidden h-40 bg-cream shrink-0">
+            {% if libro.portada %}
+            <img src="{{ libro.portada.url }}" alt="{{ libro.titulo }}"
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            {% else %}
+            <div class="w-full h-full flex flex-col items-center justify-center text-navy/20">
+              <i class="fas fa-book text-4xl mb-1"></i>
             </div>
-          </a>
-        </div>
+            {% endif %}
+          </div>
+          <div class="p-3 flex flex-col flex-1">
+            <h5 class="font-serif text-navy text-sm font-semibold leading-snug line-clamp-2 mb-1">{{ libro.titulo }}</h5>
+            <p class="text-gray-400 text-xs mb-0.5">{{ libro.autor }}</p>
+            <p class="text-gray-300 text-xs">{{ libro.año }}</p>
+            <span class="mt-auto inline-block bg-cream text-navy/60 text-[0.68rem] font-medium px-2 py-0.5 rounded-full">
+              {{ libro.categoria.nombre }}
+            </span>
+          </div>
+        </a>
         {% endfor %}
       </div>
-      {% endif %} {% endif %}
-    </div>
-  </div>
+
+      {% elif not query and not filtros.categoria_id and not filtros.year_desde and not filtros.year_hasta %}
+      <div class="bg-white rounded-xl border border-stone-100 shadow-bv-sm p-12 text-center">
+        <i class="fas fa-search text-5xl text-gray-200 mb-4 block"></i>
+        <p class="text-gray-400 text-sm">Escribe un título, autor o aplica filtros para buscar libros.</p>
+      </div>
+      {% endif %}
+
+    </div>{# /resultados #}
+  </div>{# /layout #}
+
 </div>
 {% endblock %}

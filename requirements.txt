@@ -1,0 +1,26 @@
+asgiref==3.11.1
+Django==6.0.2
+sqlparse==0.5.5
+tzdata==2025.3
+
+# Variables de entorno
+django-environ==0.11.2
+
+# Procesamiento de datos
+pandas==3.0.1
+openpyxl==3.1.5
+
+# Imágenes (requerido por ImageField de Django)
+Pillow==12.1.1
+
+# API externos
+requests>=2.31
+
+# CORS headers (requerido por corsheaders en INSTALLED_APPS)
+django-cors-headers==4.7.0
+
+# Django REST Framework (requerido por rest_framework en INSTALLED_APPS)
+djangorestframework==3.16.0
+
+# Servidor WSGI para producción
+gunicorn==23.0.0

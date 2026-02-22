@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bienvenido a la Biblioteca Pozo de Jacob</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F0EDE6;font-family:Georgia,'Times New Roman',serif;">
+
+  <!-- Wrapper -->
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F0EDE6;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color:#152B47;border-radius:12px 12px 0 0;padding:28px 36px;text-align:center;">
+              <span style="display:inline-block;background-color:rgba(200,169,81,0.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+                <span style="color:#C8A951;font-size:22px;">&#128218;</span>
+              </span>
+              <p style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:bold;color:#C8A951;letter-spacing:0.5px;">
+                Biblioteca
+              </p>
+              <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.55);letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">
+                Pozo de Jacob
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background-color:#ffffff;padding:36px 36px 28px;">
+
+              <!-- Saludo -->
+              <p style="margin:0 0 8px;font-size:13px;color:#C8A951;text-transform:uppercase;letter-spacing:2px;font-family:Arial,sans-serif;">
+                &#x2014; Bienvenido
+              </p>
+              <h1 style="margin:0 0 20px;font-family:Georgia,serif;font-size:26px;color:#152B47;line-height:1.2;">
+                ¡Hola, {{ nombre }}!
+              </h1>
+              <p style="margin:0 0 20px;font-size:15px;color:#555555;line-height:1.7;font-family:Arial,sans-serif;">
+                Tu cuenta en la <strong>Biblioteca Virtual</strong> ha sido creada exitosamente.
+                Ahora tienes acceso a cientos de libros, estudios bíblicos y recursos ministeriales
+                seleccionados para edificar tu vida espiritual.
+              </p>
+
+              <!-- Separador -->
+              <div style="height:1px;background-color:#E8E0D0;margin:24px 0;"></div>
+
+              <!-- Credenciales -->
+              <p style="margin:0 0 12px;font-size:13px;font-weight:bold;color:#152B47;text-transform:uppercase;letter-spacing:1px;font-family:Arial,sans-serif;">
+                Tus credenciales de acceso
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F8F5EE;border-radius:8px;border:1px solid #E8E0D0;">
+                <tr>
+                  <td style="padding:16px 20px;border-bottom:1px solid #E8E0D0;">
+                    <p style="margin:0;font-size:11px;color:#999999;text-transform:uppercase;letter-spacing:1px;font-family:Arial,sans-serif;">Correo electrónico</p>
+                    <p style="margin:4px 0 0;font-size:15px;color:#152B47;font-weight:bold;font-family:Arial,sans-serif;">{{ email }}</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0;font-size:11px;color:#999999;text-transform:uppercase;letter-spacing:1px;font-family:Arial,sans-serif;">Contraseña</p>
+                    <p style="margin:4px 0 0;font-size:16px;color:#152B47;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:1px;">{{ password }}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:16px 0 28px;font-size:13px;color:#999999;line-height:1.6;font-family:Arial,sans-serif;">
+                &#x26A0; Por seguridad, te recomendamos cambiar tu contraseña la primera vez que inicies sesión.
+              </p>
+
+              <!-- Botón CTA -->
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background-color:#C8A951;border-radius:50px;padding:0;">
+                    <a href="{{ login_url }}"
+                       style="display:inline-block;padding:13px 32px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#152B47;text-decoration:none;letter-spacing:0.5px;">
+                      Ingresar a la Biblioteca &#8594;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Versículo decorativo -->
+          <tr>
+            <td style="background-color:#F8F5EE;padding:20px 36px;border-top:1px solid #E8E0D0;">
+              <p style="margin:0;font-size:13px;font-style:italic;color:#888888;line-height:1.6;font-family:Georgia,serif;text-align:center;">
+                &ldquo;Tu palabra es una lámpara a mis pies y una luz en mi sendero.&rdquo;
+              </p>
+              <p style="margin:6px 0 0;font-size:12px;color:#C8A951;text-align:center;font-family:Arial,sans-serif;">
+                — Salmos 119:105
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#152B47;border-radius:0 0 12px 12px;padding:20px 36px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.45);font-family:Arial,sans-serif;">
+                &copy; {% now "Y" %} <strong style="color:#C8A951;">Biblioteca Virtual</strong> &mdash; Pozo de Jacob
+              </p>
+              <p style="margin:6px 0 0;font-size:11px;color:rgba(255,255,255,0.3);font-family:Arial,sans-serif;">
+                Este correo fue enviado desde <a href="mailto:notificaciones@ministeriopozodejacob.cl" style="color:rgba(255,255,255,0.4);text-decoration:none;">notificaciones@ministeriopozodejacob.cl</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

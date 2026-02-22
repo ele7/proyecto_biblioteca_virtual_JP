@@ -1,60 +1,145 @@
 {% extends 'base.html' %}
-<!---->
 {% block title %}Listado de Libros{% endblock %}
-<!---->
-{% block content %}
-<div class="container mt-4">
-  <h1 class="mb-4">Listado de Libros</h1>
-  <a href="{% url 'library:agregar_libro' %}" class="btn btn-success mb-3"
-    >Crear Libro</a
-  >
-  <table class="table table-borderless">
-    <thead class="table-dark">
-      <tr>
-        <th>ID</th>
-        <th>Título</th>
-        <th>Autor</th>
-        <th>Categoría</th>
-        <th>Año</th>
-        <th>Portada</th>
-        <th>Archivo PDF</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for libro in libros %}
-      <tr>
-        <td>{{ libro.id }}</td>
-        <td>{{ libro.titulo }}</td>
-        <td>{{ libro.autor }}</td>
-        <td>{{ libro.categoria }}</td>
-        <td>{{ libro.año }}</td>
-        <td>
-          {% if libro.portada %}
-          <img src="{{ libro.portada.url }}" alt="Portada" width="50" />
-          {% endif %}
-        </td>
-        <td>
-          {% if libro.archivo %}
-          <a href="{{ libro.archivo.url }}" target="_blank">Ver PDF</a>
-          {% endif %}
-        </td>
-        <td>
-          <a
-            href="{% url 'library:editar_libro' libro.id %}"
-            class="btn btn-sm btn-primary"
-            >Editar</a
-          >
 
-          <!-- Puedes agregar un botón de eliminar más adelante -->
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="8">No hay libros registrados.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-navy rounded-xl flex items-center justify-center text-white shrink-0">
+        <i class="fas fa-book"></i>
+      </div>
+      <h1 class="font-serif text-navy text-2xl font-bold">Listado de Libros</h1>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap">
+      <a href="{% url 'library:exportar_libros_excel' %}"
+         class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+         style="text-decoration:none">
+        <i class="fas fa-file-excel"></i> Exportar Excel
+      </a>
+      <a href="{% url 'library:agregar_libro' %}"
+         class="inline-flex items-center gap-2 bg-navy hover:bg-navy-light text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+         style="text-decoration:none">
+        <i class="fas fa-plus"></i> Crear Libro
+      </a>
+    </div>
+  </div>
+
+  {# Barra de filtros #}
+  <form method="GET" class="bg-white rounded-xl border border-stone-100 shadow-bv-sm p-4 flex flex-wrap items-end gap-3">
+    <div class="flex-1 min-w-[150px]">
+      <label class="text-xs text-gray-500 mb-1">Buscar</label>
+      <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Título o autor..."
+             class="w-full text-sm border border-stone-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-navy">
+    </div>
+    <div class="min-w-[130px]">
+      <label class="text-xs text-gray-500 mb-1">Categoría</label>
+      <select name="categoria" class="w-full text-sm border border-stone-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-navy">
+        <option value="">Todas</option>
+        {% for cat in categorias_disponibles %}
+        <option value="{{ cat.id }}" {% if request.GET.categoria == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="min-w-[90px]">
+      <label class="text-xs text-gray-500 mb-1">Año desde</label>
+      <input type="number" name="year_desde" value="{{ request.GET.year_desde|default:'' }}" placeholder="2000"
+             class="w-full text-sm border border-stone-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-navy">
+    </div>
+    <div class="min-w-[90px]">
+      <label class="text-xs text-gray-500 mb-1">Año hasta</label>
+      <input type="number" name="year_hasta" value="{{ request.GET.year_hasta|default:'' }}" placeholder="2025"
+             class="w-full text-sm border border-stone-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-navy">
+    </div>
+    <div class="min-w-[120px]">
+      <label class="text-xs text-gray-500 mb-1">Orden</label>
+      <select name="orden" class="w-full text-sm border border-stone-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-navy">
+        <option value="">Por defecto</option>
+        <option value="az" {% if request.GET.orden == 'az' %}selected{% endif %}>A → Z</option>
+        <option value="za" {% if request.GET.orden == 'za' %}selected{% endif %}>Z → A</option>
+        <option value="reciente" {% if request.GET.orden == 'reciente' %}selected{% endif %}>Más reciente</option>
+        <option value="antiguo" {% if request.GET.orden == 'antiguo' %}selected{% endif %}>Más antiguo</option>
+      </select>
+    </div>
+    <button type="submit"
+            class="inline-flex items-center gap-2 bg-navy text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-navy-light transition-colors">
+      <i class="fas fa-filter text-xs"></i> Filtrar
+    </button>
+    {% if request.GET.q or request.GET.categoria or request.GET.year_desde or request.GET.year_hasta or request.GET.orden %}
+    <a href="{% url 'library:listar_libros' %}"
+       class="inline-flex items-center gap-2 border border-stone-200 text-gray-500 text-sm px-4 py-2 rounded-lg hover:bg-stone-50 transition-colors"
+       style="text-decoration:none">
+      <i class="fas fa-times text-xs"></i> Limpiar
+    </a>
+    {% endif %}
+  </form>
+
+  <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-navy text-white">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">ID</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Título</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Autor</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Categoría</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Año</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Portada</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">PDF</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-50">
+          {% for libro in libros %}
+          <tr class="hover:bg-cream transition-colors">
+            <td class="px-4 py-3 text-gray-400 text-xs">{{ libro.id }}</td>
+            <td class="px-4 py-3 text-navy font-medium max-w-[180px] truncate">{{ libro.titulo }}</td>
+            <td class="px-4 py-3 text-gray-500">{{ libro.autor }}</td>
+            <td class="px-4 py-3">
+              <span class="bg-cream text-navy/60 text-xs font-medium px-2 py-0.5 rounded-full">
+                {{ libro.categoria }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-400">{{ libro.año }}</td>
+            <td class="px-4 py-3">
+              {% if libro.portada %}
+              <img src="{{ libro.portada.url }}" alt="Portada"
+                   class="w-10 h-14 object-cover rounded shadow-bv-sm" />
+              {% else %}
+              <span class="text-gray-300 text-xs italic">—</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              {% if libro.archivo %}
+              <a href="{{ libro.archivo.url }}" target="_blank"
+                 class="inline-flex items-center gap-1 text-xs text-navy border border-stone-200 px-2.5 py-1 rounded-lg hover:bg-navy hover:text-white hover:border-navy transition-colors"
+                 style="text-decoration:none">
+                <i class="fas fa-file-pdf text-[0.65rem]"></i> PDF
+              </a>
+              {% else %}
+              <span class="text-gray-300 text-xs italic">—</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <a href="{% url 'library:editar_libro' libro.id %}"
+                 class="inline-flex items-center gap-1.5 border border-stone-200 text-navy text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-navy hover:text-white hover:border-navy transition-colors"
+                 style="text-decoration:none">
+                <i class="fas fa-pen text-[0.65rem]"></i> Editar
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="px-5 py-12 text-center text-gray-400">
+              <i class="fas fa-book text-3xl mb-3 block opacity-20"></i>
+              No hay libros registrados.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 {% endblock %}

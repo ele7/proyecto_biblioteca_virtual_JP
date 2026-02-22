@@ -1,120 +1,662 @@
-{% extends "base.html" %} {% load static %}
-<!---->
-{% block title %}Dashboard{% endblock %}
-<!---->
-{% block content %}
-<div class="mb-5">
-  {% for categoria in categorias %}
-  <div class="categoria-section mb-5">
-    <!-- Hacer el título de categoría clickeable -->
-    <a
-      href="{% url 'library:libros_por_categoria' categoria.id %}"
-      class="text-decoration-none"
-    >
-      <h3
-        class="categoria-titulo categoria-{{ categoria.id|default:categoria.nombre|slugify }} text-center mb-4 hover-effect"
-      >
-        {{ categoria.nombre }}
-        <span class="badge bg-primary">{{ categoria.total_libros }}</span>
-        <small class="d-block mt-1 text-muted">Ver todos los libros →</small>
-      </h3>
-    </a>
+{% extends "base.html" %}
+{% load static %}
 
-    <div class="row mt-3">
-      {% for libro in categoria.libros %}
-      <div class="col-md-3 mb-4">
-        <!-- Hacer cada libro clickeable también -->
-        <a
-          href="{% url 'library:detalle_libros' libro.id %}"
-          class="text-decoration-none"
-        >
-          <div class="card h-100 shadow-sm libro-card">
-            {% if libro.portada %}
-            <img
-              src="{{ libro.portada.url }}"
-              class="card-img-top"
-              alt="{{ libro.titulo }}"
-            />
-            {% else %}
-            <img
-              src="{% static 'images/default-book-cover.jpg' %}"
-              class="card-img-top"
-              alt="Portada no disponible"
-            />
-            {% endif %}
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title text-dark">{{ libro.titulo }}</h5>
-              <p class="card-text text-muted">
-                <small>{{ libro.autor }}</small>
-              </p>
-              <p class="card-text">
-                <small class="text-muted">{{ libro.año }}</small>
-              </p>
-              <a
-                href="{% url 'library:leer_libro' libro.id %}"
-                class="btn btn-info btn-sm mt-auto"
-                >Leer</a
-              >
-            </div>
+{% block title %}Inicio — Biblioteca Virtual{% endblock %}
+
+{% block extra_head %}
+<style>
+  .versiculo-fondo { background-image: url("{% static 'img/fond.jpg' %}"); }
+</style>
+{% endblock %}
+
+
+{# ═══════════════════════════════════════════════════════════════ #}
+{# HERO — Full-bleed, fuera del contenedor max-w-7xl de base.html #}
+{# ═══════════════════════════════════════════════════════════════ #}
+{% block hero %}
+<section class="relative min-h-[78vh] flex items-center overflow-hidden">
+
+  {# Fondo: imagen estática + overlay degradado navy #}
+  <div class="absolute inset-0">
+    <img src="{% static 'img/3-2.jpg' %}" alt=""
+         class="w-full h-full object-cover" aria-hidden="true" />
+    <div class="absolute inset-0 bg-gradient-to-br from-navy-dark/96 via-navy/88 to-navy-light/75"></div>
+  </div>
+
+  {# Destellos decorativos #}
+  <div class="absolute top-16 right-20 w-96 h-96 rounded-full bg-gold/6 blur-3xl pointer-events-none"></div>
+  <div class="absolute bottom-10 left-10 w-72 h-72 rounded-full bg-gold/5 blur-2xl pointer-events-none"></div>
+
+  {# Contenido principal del hero #}
+  <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+      {# Columna izquierda — texto y CTAs #}
+      <div class="max-w-2xl">
+
+        {# Eyebrow #}
+        <div class="flex items-center gap-3 mb-7">
+          <div class="h-px w-10 bg-gold/70"></div>
+          <span class="text-gold text-xs font-semibold uppercase tracking-[0.22em]">Pozo de Jacob</span>
+        </div>
+
+        {# Título principal #}
+        <h1 class="font-serif text-5xl sm:text-6xl lg:text-[4.25rem] font-bold text-white leading-[1.08] mb-7">
+          Nutre tu fe con<br/>
+          <span class="text-gold">la Palabra</span>
+        </h1>
+
+        {# Subtítulo #}
+        <p class="text-white/65 text-lg sm:text-xl leading-relaxed mb-10 max-w-lg">
+          Accede a cientos de libros, estudios bíblicos y recursos ministeriales
+          seleccionados para edificar tu vida espiritual.
+        </p>
+
+        {# Botones CTA #}
+        <div class="flex flex-wrap gap-4">
+          <a href="{% url 'library:buscar_libro' %}"
+             class="inline-flex items-center gap-2.5 bg-gold hover:bg-gold-light text-navy font-bold
+                    text-sm px-8 py-3.5 rounded-full shadow-lg transition-colors"
+             style="text-decoration:none">
+            <i class="fas fa-book-open"></i> Explorar biblioteca
+          </a>
+          <a href="{% url 'library:mis_favoritos' %}"
+             class="inline-flex items-center gap-2.5 border border-white/30 hover:border-gold
+                    text-white hover:text-gold font-medium text-sm px-8 py-3.5 rounded-full transition-colors"
+             style="text-decoration:none">
+            <i class="fas fa-heart"></i> Mis favoritos
+          </a>
+        </div>
+
+      
+
+      </div>
+
+      <!-- {# Columna derecha — Versículo del Día integrado #}
+      <div class="hidden lg:flex justify-end">
+        {% if versiculo %}
+        <div class="relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 max-w-sm w-full">
+          {# Comilla decorativa #}
+          <div class="absolute top-4 right-5 text-8xl font-serif text-gold/20 leading-none select-none">&ldquo;</div>
+
+          <div class="flex items-center gap-2 mb-5">
+            <i class="fas fa-book-bible text-gold text-sm"></i>
+            <span class="text-gold/80 text-[0.68rem] font-semibold uppercase tracking-widest">Versículo del Día</span>
           </div>
+
+          <blockquote class="relative z-10">
+            <p class="font-serif text-white text-base leading-relaxed line-clamp-6">
+              &ldquo;{{ versiculo.texto }}&rdquo;
+            </p>
+          </blockquote>
+
+          <div class="flex items-center gap-2 mt-5">
+            <div class="flex-1 h-px bg-gold/30"></div>
+            <p class="text-gold font-semibold text-sm font-serif">{{ versiculo.referencia }}</p>
+          </div>
+
+          <a href="{% url 'library:versiculo_diario' %}"
+             class="mt-5 inline-flex items-center gap-1.5 text-white/60 hover:text-gold text-xs transition-colors"
+             style="text-decoration:none">
+            <i class="fas fa-external-link-alt text-[10px]"></i> Ver versículo completo
+          </a>
+        </div>
+        {% else %}
+        {# Fallback si la API no está disponible #}
+        <div class="relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 max-w-sm w-full text-center">
+          <i class="fas fa-bible text-gold text-3xl mb-4 block"></i>
+          <p class="font-serif text-white text-lg font-semibold mb-2">Versículo del Día</p>
+          <p class="text-white/50 text-sm mb-5">Recibe la porción bíblica diaria para nutrir tu espíritu.</p>
+          <a href="{% url 'library:versiculo_diario' %}"
+             class="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-navy font-bold text-xs px-5 py-2.5 rounded-full transition-colors"
+             style="text-decoration:none">
+            <i class="fas fa-book-open"></i> Leer versículo
+          </a>
+        </div>
+        {% endif %}
+      </div> -->
+
+    </div>
+  </div>
+
+  {# Indicador de scroll #}
+  <div class="absolute bottom-7 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1
+              text-white/25 pointer-events-none select-none">
+    <span class="text-[9px] uppercase tracking-widest">Descubrir</span>
+    <i class="fas fa-chevron-down text-xs animate-bounce"></i>
+  </div>
+
+</section>
+{% endblock %}
+
+
+{% block content %}
+
+{# ══════════════════════════════════════════════════════ #}
+{# STATS ADMIN — tarjetas de totales (solo rol ADMIN)     #}
+{# ══════════════════════════════════════════════════════ #}
+{% if stats_admin %}
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+  <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 bg-navy/10 rounded-lg flex items-center justify-center shrink-0">
+      <i class="fas fa-users text-navy text-sm"></i>
+    </div>
+    <div>
+      <p class="text-2xl font-bold font-serif text-navy">{{ stats_admin.total_usuarios }}</p>
+      <p class="text-xs text-gray-400">Usuarios</p>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 bg-gold/10 rounded-lg flex items-center justify-center shrink-0">
+      <i class="fas fa-user-graduate text-gold text-sm"></i>
+    </div>
+    <div>
+      <p class="text-2xl font-bold font-serif text-navy">{{ stats_admin.total_lectores }}</p>
+      <p class="text-xs text-gray-400">Lectores</p>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center shrink-0">
+      <i class="fas fa-book text-emerald-500 text-sm"></i>
+    </div>
+    <div>
+      <p class="text-2xl font-bold font-serif text-navy">{{ stats_admin.total_libros }}</p>
+      <p class="text-xs text-gray-400">Libros</p>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
+      <i class="fas fa-folder text-blue-400 text-sm"></i>
+    </div>
+    <div>
+      <p class="text-2xl font-bold font-serif text-navy">{{ stats_admin.total_categorias }}</p>
+      <p class="text-xs text-gray-400">Categorías</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+{# ══════════════════════════════════════════════════════ #}
+{# STATS PERSONALES (solo lectores / todos los usuarios)  #}
+{# ══════════════════════════════════════════════════════ #}
+{% if not stats_admin %}
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10">
+  <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 bg-navy/10 rounded-lg flex items-center justify-center shrink-0">
+      <i class="fas fa-book-open text-navy text-sm"></i>
+    </div>
+    <div>
+      <p class="text-2xl font-bold font-serif text-navy">{{ total_leidos }}</p>
+      <p class="text-xs text-gray-400">Libros abiertos</p>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center shrink-0">
+      <i class="fas fa-heart text-red-400 text-sm"></i>
+    </div>
+    <div>
+      <p class="text-2xl font-bold font-serif text-navy">{{ total_favoritos }}</p>
+      <p class="text-xs text-gray-400">Favoritos</p>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl shadow-bv-sm border border-stone-100 p-4 flex items-center gap-3">
+    <div class="w-9 h-9 bg-gold/10 rounded-lg flex items-center justify-center shrink-0">
+      <i class="fas fa-bible text-gold text-sm"></i>
+    </div>
+    <div>
+      <p class="text-2xl font-bold font-serif text-navy">100%</p>
+      <p class="text-xs text-gray-400">Acceso gratuito</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+{# ══════════════════════════════════════════════════════════════════════ #}
+{# VERSÍCULO DEL DÍA (móvil) + HISTORIAL RECIENTE — fila de dos columnas #}
+{# ══════════════════════════════════════════════════════════════════════ #}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+
+  {# ── Versículo del Día ───────────────────────────────────────────────── #}
+  <div class="relative bg-navy rounded-2xl overflow-hidden px-7 py-8" aria-label="Versículo del día">
+    {# Fondo sutil #}
+    <div class="versiculo-fondo absolute inset-0 bg-cover bg-center opacity-[0.04]"
+         aria-hidden="true"></div>
+    <div class="absolute -top-10 -left-10 w-44 h-44 rounded-full bg-gold/10 blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-10 -right-10 w-44 h-44 rounded-full bg-gold/10 blur-3xl pointer-events-none"></div>
+
+    <div class="relative z-10">
+
+      {# Encabezado #}
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-bible text-gold"></i>
+          <span class="text-gold/80 text-[0.68rem] font-semibold uppercase tracking-widest">Cada mañana nueva</span>
+        </div>
+        <span class="text-white/30 text-[0.62rem] font-medium border border-white/10
+                     rounded-full px-2.5 py-0.5 tracking-wide">Reina Valera 1909</span>
+      </div>
+
+      <h2 class="font-serif text-white text-2xl font-bold mb-5">Versículo del Día</h2>
+
+      {% if versiculo %}
+      <div class="relative">
+        <div class="absolute -top-2 -left-1 text-6xl font-serif text-gold/20 leading-none select-none">&ldquo;</div>
+        <p class="font-serif text-white/90 text-base leading-relaxed pl-4">
+          {{ versiculo.texto }}
+        </p>
+        <div class="flex items-center gap-3 mt-5">
+          <div class="flex-1 h-px bg-gold/20"></div>
+          <p class="text-gold font-semibold text-sm font-serif shrink-0">
+            {{ versiculo.referencia }}
+          </p>
+        </div>
+      </div>
+      <p class="text-white/25 text-[0.65rem] mt-5 flex items-center gap-1.5">
+        <i class="fas fa-sync-alt text-[9px]"></i>
+        Se actualiza automáticamente cada día a medianoche.
+      </p>
+      {% else %}
+      <p class="text-white/50 text-sm leading-relaxed">
+        Comienza tu día con una Palabra que transforma.
+      </p>
+      {% endif %}
+
+    </div>
+  </div>
+
+  {# ── Historial reciente de lectura ─────────────────────────────────── #}
+  <div class="bg-white rounded-2xl shadow-bv-sm border border-stone-100 p-7 flex flex-col">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <p class="text-gold text-[0.68rem] font-semibold uppercase tracking-widest mb-0.5">Tu actividad</p>
+        <h3 class="font-serif text-navy text-xl font-bold">Lectura reciente</h3>
+      </div>
+      <a href="{% url 'library:buscar_libro' %}" class="text-xs text-navy/50 hover:text-gold transition-colors" style="text-decoration:none">
+        Ver todo →
+      </a>
+    </div>
+
+    {% if historial_reciente %}
+    <ul class="space-y-3 flex-1">
+      {% for registro in historial_reciente %}
+      <li>
+        <a href="{% url 'library:detalle_libros' registro.libro.id %}"
+           class="flex items-center gap-3 group hover:bg-cream rounded-xl p-2 -mx-2 transition-colors"
+           style="text-decoration:none">
+          {# Portada mini #}
+          <div class="w-10 h-14 rounded-lg overflow-hidden bg-navy/10 shrink-0 flex items-center justify-center">
+            {% if registro.libro.portada %}
+            <img src="{{ registro.libro.portada.url }}" alt="{{ registro.libro.titulo }}"
+                 class="w-full h-full object-cover" />
+            {% else %}
+            <i class="fas fa-book text-navy/30 text-sm"></i>
+            {% endif %}
+          </div>
+          {# Info #}
+          <div class="flex-1 min-w-0">
+            <p class="font-serif text-navy text-sm font-semibold leading-snug line-clamp-1
+                       group-hover:text-navy-light transition-colors">
+              {{ registro.libro.titulo }}
+            </p>
+            <p class="text-gray-400 text-xs mt-0.5">{{ registro.libro.autor }}</p>
+            <p class="text-gray-300 text-[0.65rem] mt-0.5">
+              <i class="fas fa-clock mr-1"></i>{{ registro.fecha_apertura|date:"d M Y" }}
+            </p>
+          </div>
+          <i class="fas fa-chevron-right text-[10px] text-gray-300 group-hover:text-gold transition-colors shrink-0"></i>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="flex-1 flex flex-col items-center justify-center text-center py-6">
+      <div class="w-14 h-14 bg-cream rounded-2xl flex items-center justify-center mb-3">
+        <i class="fas fa-book-open text-2xl text-navy/20"></i>
+      </div>
+      <p class="font-serif text-navy text-sm font-semibold mb-1">Sin lecturas recientes</p>
+      <p class="text-gray-400 text-xs mb-4">Empieza a explorar la biblioteca y tu historial aparecerá aquí.</p>
+      <a href="{% url 'library:buscar_libro' %}"
+         class="inline-flex items-center gap-1.5 bg-navy text-white text-xs font-medium
+                px-4 py-2 rounded-full hover:bg-navy-light transition-colors"
+         style="text-decoration:none">
+        <i class="fas fa-search text-[10px]"></i> Explorar libros
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+
+{# ══════════════════════════════════════════════════════ #}
+{# ACERCA DE — propósito ministerial                      #}
+{# ══════════════════════════════════════════════════════ #}
+<section class="py-4 mb-16" aria-label="Acerca de la Biblioteca Virtual">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+
+    {# Columna imagen #}
+    <div class="relative">
+      <div class="aspect-[5/4] rounded-2xl overflow-hidden shadow-bv-lg">
+        <img src="{% static 'img/carr1.jpg' %}" alt="Acervo ministerial de la Biblioteca Virtual"
+             class="w-full h-full object-cover" />
+      </div>
+      {# Tarjeta flotante con versículo #}
+      <div class="absolute -bottom-6 -right-4 sm:-right-6 bg-white rounded-xl p-5
+                  shadow-bv-lg border border-stone-100 max-w-[195px]">
+        <i class="fas fa-cross text-gold text-xl mb-2.5 block"></i>
+        <p class="font-serif text-navy text-sm font-semibold leading-snug">
+          "La Palabra de Dios es viva y eficaz"
+        </p>
+        <p class="text-gray-400 text-[0.7rem] mt-2">— Hebreos 4:12</p>
+      </div>
+    </div>
+
+    {# Columna texto #}
+    <div class="pt-8 lg:pt-0">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="h-px w-8 bg-gold"></div>
+        <span class="text-gold text-xs font-semibold uppercase tracking-widest">Nuestra misión</span>
+      </div>
+      <h2 class="font-serif text-3xl sm:text-4xl text-navy font-bold leading-snug mb-6">
+        Un recurso ministerial para tu crecimiento espiritual
+      </h2>
+      <p class="text-gray-500 leading-relaxed mb-5">
+        La Biblioteca Virtual es una plataforma digital ministerial diseñada para poner al alcance
+        de cada creyente los mejores recursos de la fe cristiana: libros, estudios bíblicos,
+        devocionales y mucho más.
+      </p>
+      <p class="text-gray-500 leading-relaxed mb-9">
+        Creemos que el conocimiento de la Palabra transforma vidas. Por eso hemos reunido una
+        colección cuidadosamente seleccionada de materiales que fortalecen la fe, el discipulado
+        y la vida en comunidad.
+      </p>
+      <ul class="space-y-3">
+        <li class="flex items-start gap-3">
+          <div class="w-5 h-5 bg-gold/15 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fas fa-check text-gold text-[9px]"></i>
+          </div>
+          <p class="text-gray-600 text-sm">Acceso libre a recursos espirituales de calidad</p>
+        </li>
+        <li class="flex items-start gap-3">
+          <div class="w-5 h-5 bg-gold/15 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fas fa-check text-gold text-[9px]"></i>
+          </div>
+          <p class="text-gray-600 text-sm">Contenido organizado por categorías y temáticas bíblicas</p>
+        </li>
+        <li class="flex items-start gap-3">
+          <div class="w-5 h-5 bg-gold/15 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fas fa-check text-gold text-[9px]"></i>
+          </div>
+          <p class="text-gray-600 text-sm">Versículo diario en Reina Valera 1909, cargado automáticamente</p>
+        </li>
+        <li class="flex items-start gap-3">
+          <div class="w-5 h-5 bg-gold/15 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fas fa-check text-gold text-[9px]"></i>
+          </div>
+          <p class="text-gray-600 text-sm">Seguimiento de lectura y colección de favoritos</p>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+
+{# ══════════════════════════════════════════════════════ #}
+{# REFLEXIONES — Artículos estáticos                      #}
+{# ══════════════════════════════════════════════════════ #}
+<section class="mb-16" aria-label="Reflexiones y artículos">
+
+  <div class="flex items-end gap-4 mb-9">
+    <div>
+      <p class="text-gold text-[0.72rem] font-semibold uppercase tracking-widest mb-1.5">
+        Edificación espiritual
+      </p>
+      <h2 class="font-serif text-navy text-3xl font-bold">Reflexiones &amp; Artículos</h2>
+    </div>
+    <div class="flex-1 h-px bg-gradient-to-r from-gold/30 to-transparent mb-1.5" aria-hidden="true"></div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    {# Artículo 1 — Devocional #}
+    <article class="bg-white rounded-2xl overflow-hidden shadow-bv-sm border border-stone-100
+                    hover:shadow-bv-md transition-all duration-300 group flex flex-col">
+      <div class="h-48 bg-gradient-to-br from-navy to-navy-light relative overflow-hidden
+                  flex items-center justify-center" aria-hidden="true">
+        <i class="fas fa-cross text-white/10 text-[7rem]"></i>
+        <div class="absolute top-4 left-4">
+          <span class="bg-gold text-navy text-[0.6rem] font-bold px-2.5 py-1
+                       rounded-full uppercase tracking-wider">Devocional</span>
+        </div>
+      </div>
+      <div class="p-5 flex flex-col flex-1">
+        <p class="text-gray-400 text-xs mb-2.5">
+          <i class="far fa-calendar-alt mr-1.5" aria-hidden="true"></i>Febrero 2025
+        </p>
+        <h3 class="font-serif text-navy text-lg font-semibold leading-snug mb-3
+                   group-hover:text-navy-light transition-colors">
+          El poder transformador de la Palabra de Dios
+        </h3>
+        <p class="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-5 flex-1">
+          "Lámpara es a mis pies tu palabra, y lumbrera a mi camino." Descubre cómo la Biblia
+          transforma cada área de tu vida cuando la aplicas diariamente con fe y obediencia.
+        </p>
+        <a href="#" class="inline-flex items-center gap-1.5 text-gold text-sm font-semibold
+                           hover:gap-3 transition-all mt-auto" style="text-decoration:none">
+          Leer reflexión <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
         </a>
       </div>
+    </article>
+
+    {# Artículo 2 — Ministerio #}
+    <article class="bg-white rounded-2xl overflow-hidden shadow-bv-sm border border-stone-100
+                    hover:shadow-bv-md transition-all duration-300 group flex flex-col">
+      <div class="h-48 bg-gradient-to-br from-amber-800 to-amber-950 relative overflow-hidden
+                  flex items-center justify-center" aria-hidden="true">
+        <i class="fas fa-dove text-white/10 text-[7rem]"></i>
+        <div class="absolute top-4 left-4">
+          <span class="bg-gold text-navy text-[0.6rem] font-bold px-2.5 py-1
+                       rounded-full uppercase tracking-wider">Ministerio</span>
+        </div>
+      </div>
+      <div class="p-5 flex flex-col flex-1">
+        <p class="text-gray-400 text-xs mb-2.5">
+          <i class="far fa-calendar-alt mr-1.5" aria-hidden="true"></i>Enero 2025
+        </p>
+        <h3 class="font-serif text-navy text-lg font-semibold leading-snug mb-3
+                   group-hover:text-navy-light transition-colors">
+          Discipulado: La gran comisión en el siglo XXI
+        </h3>
+        <p class="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-5 flex-1">
+          El llamado de Jesús a hacer discípulos sigue siendo tan vigente hoy. Exploramos
+          estrategias bíblicas para el discipulado en la era digital y en la comunidad local.
+        </p>
+        <a href="#" class="inline-flex items-center gap-1.5 text-gold text-sm font-semibold
+                           hover:gap-3 transition-all mt-auto" style="text-decoration:none">
+          Leer reflexión <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
+        </a>
+      </div>
+    </article>
+
+    {# Artículo 3 — Oración #}
+    <article class="bg-white rounded-2xl overflow-hidden shadow-bv-sm border border-stone-100
+                    hover:shadow-bv-md transition-all duration-300 group flex flex-col">
+      <div class="h-48 bg-gradient-to-br from-slate-600 to-slate-900 relative overflow-hidden
+                  flex items-center justify-center" aria-hidden="true">
+        <i class="fas fa-pray text-white/10 text-[7rem]"></i>
+        <div class="absolute top-4 left-4">
+          <span class="bg-gold text-navy text-[0.6rem] font-bold px-2.5 py-1
+                       rounded-full uppercase tracking-wider">Oración</span>
+        </div>
+      </div>
+      <div class="p-5 flex flex-col flex-1">
+        <p class="text-gray-400 text-xs mb-2.5">
+          <i class="far fa-calendar-alt mr-1.5" aria-hidden="true"></i>Enero 2025
+        </p>
+        <h3 class="font-serif text-navy text-lg font-semibold leading-snug mb-3
+                   group-hover:text-navy-light transition-colors">
+          La oración: Comunicación vital con el Padre
+        </h3>
+        <p class="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-5 flex-1">
+          La oración no es un ritual, es una conversación íntima con el Dios vivo. Aprende a
+          desarrollar una vida de oración poderosa y efectiva basada en las Escrituras.
+        </p>
+        <a href="#" class="inline-flex items-center gap-1.5 text-gold text-sm font-semibold
+                           hover:gap-3 transition-all mt-auto" style="text-decoration:none">
+          Leer reflexión <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
+        </a>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+
+{# ══════════════════════════════════════════════════════ #}
+{# CATÁLOGO — Itera categorías enviadas por la vista      #}
+{# ══════════════════════════════════════════════════════ #}
+<div class="space-y-10">
+  {% for categoria in categorias %}
+  <section>
+
+    {# Encabezado de categoría #}
+    <a href="{% url 'library:libros_por_categoria' categoria.id %}"
+       class="group flex items-center gap-3 mb-5 hover:opacity-90 transition-opacity"
+       style="text-decoration:none">
+      <div class="flex-1 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
+           aria-hidden="true"></div>
+      <h3 class="font-serif text-navy text-xl font-semibold whitespace-nowrap">
+        {{ categoria.nombre }}
+        <span class="ml-2 bg-gold/15 text-gold border border-gold/30 text-xs font-bold
+                     px-2 py-0.5 rounded-full align-middle">{{ categoria.total_libros }}</span>
+      </h3>
+      <div class="flex-1 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"
+           aria-hidden="true"></div>
+      <span class="text-xs text-gold/60 group-hover:text-gold transition-colors whitespace-nowrap">
+        Ver todos →
+      </span>
+    </a>
+
+    {# Grid de tarjetas de libros #}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {% for libro in categoria.libros %}
+      <div class="group bg-white rounded-xl shadow-bv-sm border border-stone-100 overflow-hidden
+                  hover:shadow-bv-md hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer"
+           data-url="{% url 'library:detalle_libros' libro.id %}"
+           onclick="window.location.href=this.dataset.url">
+
+        {# Portada #}
+        <div class="relative overflow-hidden h-40 bg-cream shrink-0">
+          {% if libro.portada %}
+          <img src="{{ libro.portada.url }}" alt="{{ libro.titulo }}"
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          {% else %}
+          <div class="w-full h-full flex flex-col items-center justify-center text-navy/20">
+            <i class="fas fa-book text-4xl mb-1" aria-hidden="true"></i>
+            <span class="text-xs">Sin portada</span>
+          </div>
+          {% endif %}
+        </div>
+
+        {# Información del libro #}
+        <div class="p-3 flex flex-col flex-1">
+          <h5 class="font-serif text-navy text-sm font-semibold leading-snug line-clamp-2 mb-1">
+            {{ libro.titulo }}
+          </h5>
+          <p class="text-gray-400 text-xs mb-0.5">{{ libro.autor }}</p>
+          <p class="text-gray-300 text-xs mb-3">{{ libro.año }}</p>
+
+          <div class="mt-auto">
+            {% if user.is_admin %}
+            <a href="{% url 'library:leer_libro' libro.id %}"
+               onclick="event.stopPropagation()"
+               class="inline-flex items-center gap-1.5 bg-navy text-white text-xs font-medium
+                      px-3 py-1.5 rounded-full hover:bg-navy-light transition-colors"
+               style="text-decoration:none">
+              <i class="fas fa-book-open text-[10px]" aria-hidden="true"></i> Leer
+            </a>
+            {% else %}
+            <a href="{% url 'library:detalle_libros' libro.id %}"
+               onclick="event.stopPropagation()"
+               class="inline-flex items-center gap-1.5 border border-navy text-navy text-xs font-medium
+                      px-3 py-1.5 rounded-full hover:bg-navy hover:text-white transition-colors"
+               style="text-decoration:none">
+              <i class="fas fa-eye text-[10px]" aria-hidden="true"></i> Ver detalle
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
       {% empty %}
-      <div class="col-12">
-        <p class="text-muted">No hay libros en esta categoría.</p>
+      <div class="col-span-full text-center text-gray-400 py-8 text-sm">
+        <i class="fas fa-book-open text-2xl mb-2 block opacity-30" aria-hidden="true"></i>
+        No hay libros en esta categoría.
       </div>
       {% endfor %}
     </div>
 
-    <!-- Paginación -->
+    {# Paginación por categoría #}
     {% if categoria.total_pages > 1 %}
-    <nav aria-label="Page navigation for {{ categoria.nombre }}" class="mt-4">
-      <ul class="pagination justify-content-center">
-        {% if categoria.has_previous %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="?page_{{ categoria.id }}={{ categoria.previous_page_number }}"
-            >Anterior</a
-          >
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-          <span class="page-link">Anterior</span>
-        </li>
-        {% endif %} {% for num in categoria.page_range %}
-        <li
-          class="page-item {% if num == categoria.page_number %}active{% endif %}"
-        >
-          <a class="page-link" href="?page_{{ categoria.id }}={{ num }}"
-            >{{ num }}</a
-          >
-        </li>
-        {% endfor %} {% if categoria.has_next %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="?page_{{ categoria.id }}={{ categoria.next_page_number }}"
-            >Siguiente</a
-          >
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-          <span class="page-link">Siguiente</span>
-        </li>
-        {% endif %}
-      </ul>
+    <nav aria-label="Páginas de {{ categoria.nombre }}" class="flex justify-center mt-5 gap-1 flex-wrap">
+      {% if categoria.has_previous %}
+      <a href="?page_{{ categoria.id }}={{ categoria.previous_page_number }}"
+         class="px-3 py-1.5 text-xs border border-stone-200 rounded-lg text-navy
+                hover:bg-navy hover:text-white transition-colors"
+         style="text-decoration:none">← Anterior</a>
+      {% else %}
+      <span class="px-3 py-1.5 text-xs border border-stone-100 rounded-lg text-gray-300 cursor-not-allowed">
+        ← Anterior
+      </span>
+      {% endif %}
+
+      {% for num in categoria.page_range %}
+      <a href="?page_{{ categoria.id }}={{ num }}"
+         class="px-3 py-1.5 text-xs border rounded-lg transition-colors
+                {% if num == categoria.page_number %}bg-navy text-white border-navy
+                {% else %}border-stone-200 text-navy hover:bg-navy hover:text-white{% endif %}"
+         style="text-decoration:none">{{ num }}</a>
+      {% endfor %}
+
+      {% if categoria.has_next %}
+      <a href="?page_{{ categoria.id }}={{ categoria.next_page_number }}"
+         class="px-3 py-1.5 text-xs border border-stone-200 rounded-lg text-navy
+                hover:bg-navy hover:text-white transition-colors"
+         style="text-decoration:none">Siguiente →</a>
+      {% else %}
+      <span class="px-3 py-1.5 text-xs border border-stone-100 rounded-lg text-gray-300 cursor-not-allowed">
+        Siguiente →
+      </span>
+      {% endif %}
     </nav>
     {% endif %}
-  </div>
+
+  </section>
+
+  {# Estado vacío — sin categorías #}
   {% empty %}
-  <div class="alert alert-info">
-    <h4>No tienes categorías asignadas</h4>
-    <p class="mb-0">
-      Contacta al administrador para que te asigne categorías de libros.
-    </p>
+  <div class="bg-white rounded-xl border border-stone-100 shadow-bv-sm p-10 text-center">
+    <i class="fas fa-folder-open text-5xl text-gray-200 mb-4 block" aria-hidden="true"></i>
+    {% if user.is_admin %}
+      <h4 class="font-serif text-navy text-lg mb-2">No hay categorías creadas</h4>
+      <p class="text-gray-400 text-sm mb-4">Aún no se han creado categorías de libros en el sistema.</p>
+      <a href="{% url 'library:categorias_crear' %}"
+         class="inline-flex items-center gap-2 bg-gold text-navy text-sm font-semibold
+                px-4 py-2 rounded-full hover:bg-gold-light transition-colors"
+         style="text-decoration:none">
+        <i class="fas fa-plus text-xs" aria-hidden="true"></i> Crear primera categoría
+      </a>
+    {% else %}
+      <h4 class="font-serif text-navy text-lg mb-2">Sin categorías asignadas</h4>
+      <p class="text-gray-400 text-sm">
+        Contacta al administrador para que te asigne acceso a las categorías.
+      </p>
+    {% endif %}
   </div>
+  {% endfor %}
 </div>
-{% endfor %}
-<!---->
+
 {% endblock %}

@@ -1,381 +1,479 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Biblioteca{% endblock %}</title>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Biblioteca Virtual{% endblock %}</title>
+  <link rel="icon" href="data:," />
 
-    <!-- Favicon -->
-    <link rel="icon" href="data:," />
+  <!-- Google Fonts: Playfair Display + Inter (reemplaza Bootstrap Icons) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  <!-- Font Awesome 6 — iconos (se mantiene) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-    <!-- AdminLTE y FontAwesome via CDN -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf_viewer.min.css"
-    />
-    <!-- Bootstrap 5 -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css"
-    />
-  </head>
+  <!-- Tailwind CSS Play CDN — reemplaza Bootstrap CSS y todo el bloque <style> de 600 líneas -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy:  { DEFAULT: '#1E3A5F', dark: '#152B47', light: '#2B4F7F' },
+            gold:  { DEFAULT: '#C8A951', light: '#DFC077' },
+            cream: '#F8F5EE',
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'serif'],
+            sans:  ['Inter', 'sans-serif'],
+          },
+          boxShadow: {
+            'bv-sm': '0 1px 3px rgba(0,0,0,.08)',
+            'bv-md': '0 4px 12px rgba(0,0,0,.10)',
+            'bv-lg': '0 10px 28px rgba(0,0,0,.13)',
+          },
+        },
+      },
+    }
+  </script>
 
-  <body class="hold-transition layout-top-nav">
-    <div class="container">
-      <div class="wrapper">
-        <!-- NAV SUPERIOR SIMPLIFICADO -->
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-2">
-          <div class="row w-100 align-items-center">
-            <!-- Logo y nombre -->
-            <div class="col-lg-4 col-md-4">
-              <a
-                class="navbar-brand d-flex align-items-center"
-                href="{% url 'library:dashboard' %}"
-              >
-                <span class="fs-5 text-white" style="padding: 20px"
-                  >Biblioteca Virtual</span
-                >
-              </a>
-            </div>
+  <!-- Alpine.js — reemplaza Bootstrap JS para dropdowns y menú móvil -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 
-            <!-- Buscador -->
-            <div class="col-lg-5 col-md-5">
-              <form
-                class="d-flex"
-                method="GET"
-                action="{% url 'library:buscar_libro' %}"
-              >
-                <div class="input-group">
-                  <input
-                    class="form-control"
-                    type="search"
-                    name="q"
-                    placeholder="Buscar libro por título o autor..."
-                    aria-label="Buscar"
-                  />
-                  <button class="btn btn-success" type="submit">
-                    <i class="fas fa-search"></i>
-                  </button>
-                </div>
-              </form>
-            </div>
+  <!-- CSS mínimo para widgets Django (form-control, form-select generados por el ORM) -->
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #F8F5EE; }
+    h1, h2, h3, h4, h5, h6 { font-family: 'Playfair Display', serif; }
 
-            <!-- Usuario -->
-            <div class="col-lg-3 col-md-3">
-              <div class="d-flex justify-content-end align-items-center">
-                {% if user.is_authenticated %}
-                <div class="dropdown">
-                  <button
-                    class="btn btn-outline-light btn-sm dropdown-toggle"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                  >
-                    <i class="fas fa-user-circle me-1"></i>
-                    {{ request.user.name|default:request.user.email }}
-                  </button>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="{% url 'library:user_profile' %}"
-                      >
-                        <i class="fas fa-user me-1"></i>Mi Perfil
-                      </a>
-                    </li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li>
-                      <form
-                        method="POST"
-                        action="{% url 'library:logout_view' %}"
-                        class="d-inline"
-                      >
-                        {% csrf_token %}
-                        <button type="submit" class="dropdown-item text-danger">
-                          <i class="fas fa-sign-out-alt me-1"></i>Cerrar Sesión
-                        </button>
-                      </form>
-                    </li>
-                  </ul>
-                </div>
-                {% else %}
-                <a
-                  href="{% url 'library:login' %}"
-                  class="btn btn-outline-light btn-sm me-2"
-                >
-                  <i class="fas fa-sign-in-alt me-1"></i>Ingresar
-                </a>
-                <a href="#" class="btn btn-primary btn-sm">
-                  <i class="fas fa-user-plus me-1"></i>Registrarse
-                </a>
-                {% endif %}
-              </div>
-            </div>
+    /* Widgets de formulario renderizados por Django */
+    .form-control, .form-select,
+    input[type="text"], input[type="email"], input[type="password"],
+    input[type="number"], textarea, select {
+      display: block; width: 100%; padding: 0.5rem 0.75rem;
+      font-size: 0.875rem; line-height: 1.5;
+      border: 1.5px solid #E5DFD0; border-radius: 0.5rem;
+      background: #fff; color: #1A1A2E;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-control:focus, .form-select:focus,
+    input[type="text"]:focus, input[type="email"]:focus,
+    input[type="password"]:focus, input[type="number"]:focus,
+    textarea:focus, select:focus {
+      outline: none; border-color: #1E3A5F;
+      box-shadow: 0 0 0 3px rgba(30,58,95,.12);
+    }
+    input[type="file"] { padding: 0.35rem 0.5rem; font-size: 0.8rem; }
+    .form-check-input { width: 1rem; height: 1rem; margin-right: 0.4rem; cursor: pointer; }
+    label { font-size: 0.8125rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; display: block; }
+    .errorlist { list-style: none; padding: 0; margin: 0.25rem 0 0; }
+    .errorlist li { font-size: 0.8rem; color: #991B1B; }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="min-h-full flex flex-col">
+
+  <!-- ═══════════════════════════════════
+       TOP BAR — navegación principal
+  ═══════════════════════════════════ -->
+  <nav class="bg-navy sticky top-0 z-50 shadow-bv-md" role="banner">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center gap-3 py-2.5">
+
+        <!-- Logo -->
+        <a href="{% url 'library:dashboard' %}" class="flex items-center gap-2 shrink-0 group">
+          <span class="w-8 h-8 bg-gold/20 rounded-lg flex items-center justify-center text-gold text-sm">
+            <i class="fas fa-book-open"></i>
+          </span>
+          <span class="font-serif font-bold text-gold text-lg leading-none group-hover:text-gold-light transition-colors">
+            Biblioteca<span class="text-white/80 font-normal">&nbsp;Pozo de Jacob</span>
+          </span>
+        </a>
+
+        <!-- Buscador central (oculto en móvil, visible sm+) -->
+        <form class="flex-1 max-w-xl hidden sm:block" method="GET" action="{% url 'library:buscar_libro' %}">
+          <div class="flex rounded-full overflow-hidden border border-white/20 focus-within:border-gold transition-colors">
+            <input
+              type="search" name="q"
+              placeholder="Buscar libro o autor..."
+              value="{{ request.GET.q|default:'' }}"
+              class="flex-1 bg-white/10 border-0 text-white placeholder-white/50 px-4 py-1.5 text-sm focus:outline-none focus:bg-white/15 focus:box-shadow-none"
+            />
+            <button type="submit" class="bg-gold hover:bg-gold-light text-navy px-4 text-sm font-semibold transition-colors shrink-0">
+              <i class="fas fa-search"></i>
+            </button>
           </div>
-        </nav>
+        </form>
 
-        <!-- NAV ADMIN (solo para administradores) -->
-        {% if user.is_authenticated %}
-        <!---->
-        {% if user.rol.nombre == "ADMIN" %}
-        <nav class="navbar navbar-expand-xl navbar-dark bg-dark sticky-top">
-          <div class="container-fluid">
-            <!-- Botón hamburguesa para móvil -->
+        <!-- Acciones de sesión (derecha) -->
+        <div class="ml-auto flex items-center gap-2">
+
+          <!-- Ícono buscador en móvil -->
+          <a href="{% url 'library:buscar_libro' %}" class="sm:hidden text-white/70 hover:text-gold p-2 transition-colors">
+            <i class="fas fa-search"></i>
+          </a>
+
+          {% if user.is_authenticated %}
+          <!-- Dropdown de usuario — Alpine.js, reemplaza data-bs-toggle -->
+          <div class="relative" x-data="{ open: false }">
             <button
-              class="navbar-toggler"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#navbarAdmin"
+              @click="open = !open"
+              @keydown.escape.window="open = false"
+              class="flex items-center gap-2 border border-white/30 hover:border-gold text-white/90 hover:text-gold rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors"
             >
-              <span class="navbar-toggler-icon"></span>
+              <i class="fas fa-user-circle"></i>
+              <span class="hidden sm:inline max-w-[9rem] truncate">{{ user.name|default:user.email|truncatechars:18 }}</span>
+              <i class="fas fa-chevron-down text-[9px] transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
             </button>
 
-            <!-- Menú administración -->
             <div
-              class="collapse navbar-collapse justify-content-center"
-              id="navbarAdmin"
+              x-show="open"
+              @click.outside="open = false"
+              x-transition:enter="transition ease-out duration-150"
+              x-transition:enter-start="opacity-0 -translate-y-1"
+              x-transition:enter-end="opacity-100 translate-y-0"
+              x-transition:leave="transition ease-in duration-100"
+              x-transition:leave-end="opacity-0"
+              class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-bv-lg border border-stone-100 py-1 z-50"
+              style="display:none"
             >
-              <ul class="navbar-nav w-100 d-flex justify-content-around">
-                <!-- Inicio -->
-                <li class="nav-item">
-                  <a
-                    href="{% url 'library:dashboard' %}"
-                    class="nav-link text-white"
-                  >
-                    <i class="fas fa-home me-1"></i>Inicio
-                  </a>
-                </li>
-
-                <!-- Usuarios -->
-                <li class="nav-item dropdown">
-                  <a
-                    class="nav-link dropdown-toggle text-white"
-                    href="#"
-                    id="usuariosDropdown"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                  >
-                    <i class="fas fa-users me-1"></i>Usuarios
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-dark">
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="{% url 'library:usuarios_crear' %}"
-                      >
-                        <i class="fas fa-user-plus me-1"></i>Crear Usuario
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="{% url 'library:usuarios_listar' %}"
-                      >
-                        <i class="fas fa-list me-1"></i>Listado de Usuarios
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-
-                <!-- Categorías -->
-                <li class="nav-item dropdown">
-                  <a
-                    class="nav-link dropdown-toggle text-white"
-                    href="#"
-                    id="categoriasDropdown"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                  >
-                    <i class="fas fa-tags me-1"></i>Categorías
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-dark">
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="{% url 'library:categorias_crear' %}"
-                      >
-                        <i class="fas fa-plus me-1"></i>Agregar Categoría
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="{% url 'library:categorias_listar' %}"
-                      >
-                        <i class="fas fa-list me-1"></i>Listado de Categorías
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-
-                <!-- Libros -->
-                <li class="nav-item dropdown">
-                  <a
-                    class="nav-link dropdown-toggle text-white"
-                    href="#"
-                    id="librosDropdown"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                  >
-                    <i class="fas fa-book me-1"></i>Libros
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-dark">
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="{% url 'library:agregar_libro' %}"
-                      >
-                        <i class="fas fa-plus me-1"></i>Agregar Libro
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="{% url 'library:listar_libros' %}"
-                      >
-                        <i class="fas fa-list me-1"></i>Listado de Libros
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-              </ul>
+              <div class="px-3 py-2.5 border-b border-stone-100 mb-1">
+                <p class="text-[0.68rem] text-gray-400 uppercase tracking-wider mb-0.5">Sesión activa</p>
+                <p class="text-sm font-semibold text-navy truncate">{{ user.email }}</p>
+                {% if user.rol %}<p class="text-[0.72rem] text-gold font-medium mt-0.5">{{ user.rol.nombre }}</p>{% endif %}
+              </div>
+              <a href="{% url 'library:dashboard' %}" class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-cream hover:text-navy rounded-lg mx-1 transition-colors">
+                <i class="fas fa-home w-4 text-navy/50 text-center"></i> Inicio
+              </a>
+              <a href="{% url 'library:user_profile' %}" class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-cream hover:text-navy rounded-lg mx-1 transition-colors">
+                <i class="fas fa-user w-4 text-navy/50 text-center"></i> Mi Perfil
+              </a>
+              <a href="{% url 'library:mis_favoritos' %}" class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-cream hover:text-navy rounded-lg mx-1 transition-colors">
+                <i class="fas fa-heart w-4 text-red-400 text-center"></i> Mis Favoritos
+              </a>
+              <a href="{% url 'library:solicitar_libro' %}" class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-cream hover:text-navy rounded-lg mx-1 transition-colors">
+                <i class="fas fa-book-medical w-4 text-navy/50 text-center"></i> Solicitar Libro
+              </a>
+              <div class="border-t border-stone-100 mt-1 pt-1">
+                <form method="POST" action="{% url 'library:logout_view' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg mx-0 transition-colors">
+                    <i class="fas fa-sign-out-alt w-4 text-center"></i> Cerrar Sesión
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
-        </nav>
-        {% endif %}
-        <!---->
-        {% endif %}
 
-        <!-- Content Wrapper -->
-        <div class="content-wrapper">
-          <section class="content pt-3">
-            {% if request.path == '/dashboard/' %}
-            <!-- Banner principal simple -->
-            <img
-              src="{% static 'img/logo_a.jpg' %}"
-              class="img-fluid w-100"
-              alt="Banner principal Biblioteca Virtual"
-            />
+          {% else %}
+          <a href="{% url 'library:login' %}" class="flex items-center gap-1.5 border border-white/30 text-white/90 hover:text-gold hover:border-gold rounded-full px-3.5 py-1.5 text-sm transition-colors">
+            <i class="fas fa-sign-in-alt"></i>
+            <span class="hidden sm:inline">Ingresar</span>
+          </a>
+          {% endif %}
+        </div>
 
-            <!-- Samurai Banner ajustado -->
-            <div class="samurai-banner-wrapper row g-3 mt-3">
-              <!-- Columna 1 -->
-              <div class="col-12 col-md-6 col-xl-4">
-                <div class="banner-t11-item">
-                  <div
-                    class="banner-t11-imagen"
-                    style="
-                      background-image: url('https://clcchile.com/images/original/categoria-libros.jpg');
-                    "
-                  ></div>
-                  <div
-                    class="banner-t11-content d-flex flex-column align-items-start justify-content-end"
-                  >
-                    <h3 class="samurai-text">Libros</h3>
-                    <a
-                      href="/esp/libros"
-                      class="sm-btn sm-btn-secondary stretched-link"
-                      >Ver más</a
-                    >
-                  </div>
-                </div>
-              </div>
+      </div>
+    </div>
+  </nav>
 
-              <!-- Columna 2 -->
-              <div class="col-12 col-md-6 col-xl-4">
-                <div class="banner-t11-item">
-                  <div
-                    class="banner-t11-imagen"
-                    style="
-                      background-image: url('https://clcchile.com/images/original/22884130767-f3b6d8c3e2-o.jpg');
-                    "
-                  ></div>
-                  <div
-                    class="banner-t11-content d-flex flex-column align-items-start justify-content-end"
-                  >
-                    <h3 class="samurai-text">Biblias</h3>
-                    <a
-                      href="/esp/biblias"
-                      class="sm-btn sm-btn-secondary stretched-link"
-                      >Ver más</a
-                    >
-                  </div>
-                </div>
-              </div>
+  <!-- ═══════════════════════════════════
+       BARRA ADMIN — solo para rol ADMIN
+       Usa user.is_admin (property de CustomUser)
+       Reemplaza el check inconsistente is_superuser/rol.nombre
+  ═══════════════════════════════════ -->
+  {% if user.is_authenticated and user.is_admin %}
+  <nav class="bg-navy-dark border-b-2 border-gold" aria-label="Administración" x-data="{ mobileOpen: false }">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center min-h-[2.75rem]">
 
-              <!-- Columna 3 -->
-              <div class="col-12 col-md-6 col-xl-4">
-                <div class="banner-t11-item">
-                  <div
-                    class="banner-t11-imagen"
-                    style="
-                      background-image: url('https://clcchile.com/images/original/long-row-colorful-books.jpg');
-                    "
-                  ></div>
-                  <div
-                    class="banner-t11-content d-flex flex-column align-items-start justify-content-end"
-                  >
-                    <h3 class="samurai-text">Promociones</h3>
-                    <a
-                      href="https://www.clcchile.com/esp/promociones"
-                      class="sm-btn sm-btn-secondary stretched-link"
-                      >Ver Más</a
-                    >
-                  </div>
-                </div>
-              </div>
+        <!-- Toggle móvil -->
+        <button
+          @click="mobileOpen = !mobileOpen"
+          class="lg:hidden border border-white/20 hover:border-gold text-white/70 hover:text-gold rounded px-2 py-1 text-xs mr-3 transition-colors"
+        >
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Links -->
+        <div
+          :class="mobileOpen ? 'flex' : 'hidden lg:flex'"
+          class="flex-col lg:flex-row items-start lg:items-stretch w-full lg:w-auto py-2 lg:py-0"
+        >
+          <a href="{% url 'library:dashboard' %}" class="flex items-center gap-1.5 text-white/70 hover:text-gold text-xs font-medium px-3.5 h-11 border-b-2 border-transparent hover:border-gold transition-all whitespace-nowrap">
+            <i class="fas fa-home fa-xs"></i> Inicio
+          </a>
+
+          <!-- Usuarios -->
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" @click.outside="open = false"
+              class="flex items-center gap-1.5 text-white/70 hover:text-gold text-xs font-medium px-3.5 h-11 border-b-2 border-transparent hover:border-gold transition-all whitespace-nowrap">
+              <i class="fas fa-users fa-xs"></i> Usuarios
+              <i class="fas fa-chevron-down text-[9px]" :class="open ? 'rotate-180' : ''"></i>
+            </button>
+            <div x-show="open" x-transition class="absolute left-0 top-full mt-0.5 w-52 bg-navy-dark border border-white/10 rounded-lg shadow-bv-lg py-1 z-50" style="display:none">
+              <a href="{% url 'library:usuarios_crear' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-user-plus w-4 text-center"></i> Crear Usuario
+              </a>
+              <a href="{% url 'library:usuarios_listar' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-list w-4 text-center"></i> Listar Usuarios
+              </a>
+              <div class="border-t border-white/10 my-1"></div>
+              <a href="{% url 'library:usuarios_carga_masiva' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-file-upload w-4 text-center"></i> Carga Masiva
+              </a>
             </div>
-            {% endif %}
+          </div>
 
-            <!-- BLOQUE CONTENT PRINCIPAL -->
-            {% block content %} {% endblock %}
-          </section>
+          <!-- Categorías -->
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" @click.outside="open = false"
+              class="flex items-center gap-1.5 text-white/70 hover:text-gold text-xs font-medium px-3.5 h-11 border-b-2 border-transparent hover:border-gold transition-all whitespace-nowrap">
+              <i class="fas fa-tags fa-xs"></i> Categorías
+              <i class="fas fa-chevron-down text-[9px]" :class="open ? 'rotate-180' : ''"></i>
+            </button>
+            <div x-show="open" x-transition class="absolute left-0 top-full mt-0.5 w-52 bg-navy-dark border border-white/10 rounded-lg shadow-bv-lg py-1 z-50" style="display:none">
+              <a href="{% url 'library:categorias_crear' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-plus w-4 text-center"></i> Crear Categoría
+              </a>
+              <a href="{% url 'library:categorias_listar' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-list w-4 text-center"></i> Listar Categorías
+              </a>
+            </div>
+          </div>
+
+          <!-- Libros -->
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" @click.outside="open = false"
+              class="flex items-center gap-1.5 text-white/70 hover:text-gold text-xs font-medium px-3.5 h-11 border-b-2 border-transparent hover:border-gold transition-all whitespace-nowrap">
+              <i class="fas fa-book fa-xs"></i> Libros
+              <i class="fas fa-chevron-down text-[9px]" :class="open ? 'rotate-180' : ''"></i>
+            </button>
+            <div x-show="open" x-transition class="absolute left-0 top-full mt-0.5 w-52 bg-navy-dark border border-white/10 rounded-lg shadow-bv-lg py-1 z-50" style="display:none">
+              <a href="{% url 'library:agregar_libro' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-plus w-4 text-center"></i> Agregar Libro
+              </a>
+              <a href="{% url 'library:listar_libros' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-list w-4 text-center"></i> Listar Libros
+              </a>
+              <div class="border-t border-white/10 my-1"></div>
+              <a href="{% url 'library:libros_carga_masiva' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-file-upload w-4 text-center"></i> Carga Masiva
+              </a>
+            </div>
+          </div>
+
+          <!-- Solicitudes -->
+          <a href="{% url 'library:panel_solicitudes' %}" class="flex items-center gap-1.5 text-white/70 hover:text-gold text-xs font-medium px-3.5 h-11 border-b-2 border-transparent hover:border-gold transition-all whitespace-nowrap">
+            <i class="fas fa-inbox fa-xs"></i> Solicitudes
+          </a>
+
+          <!-- Estadísticas (dropdown) -->
+          <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" @click.outside="open = false"
+              class="flex items-center gap-1.5 text-white/70 hover:text-gold text-xs font-medium px-3.5 h-11 border-b-2 border-transparent hover:border-gold transition-all whitespace-nowrap">
+              <i class="fas fa-chart-bar fa-xs"></i> Estadísticas
+              <i class="fas fa-chevron-down text-[9px]" :class="open ? 'rotate-180' : ''"></i>
+            </button>
+            <div x-show="open" x-transition class="absolute left-0 top-full mt-0.5 w-56 bg-navy-dark border border-white/10 rounded-lg shadow-bv-lg py-1 z-50" style="display:none">
+              <a href="{% url 'library:visitas_usuarios' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-eye w-4 text-center"></i> Visitas Usuarios
+              </a>
+              <a href="{% url 'library:auditoria_panel' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-shield-alt w-4 text-center"></i> Log Auditoría
+              </a>
+              <div class="border-t border-white/10 my-1"></div>
+              <a href="{% url 'library:exportar_usuarios_excel' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-file-excel w-4 text-center"></i> Exportar Usuarios
+              </a>
+              <a href="{% url 'library:exportar_libros_excel' %}" class="flex items-center gap-2 px-3 py-2 text-xs text-white/75 hover:text-gold hover:bg-white/5 transition-colors">
+                <i class="fas fa-file-excel w-4 text-center"></i> Exportar Libros
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Badge desktop -->
+        <div class="ml-auto hidden lg:flex items-center pr-1">
+          <span class="bg-gold/15 text-gold border border-gold/30 rounded-full text-[0.68rem] font-semibold px-3 py-1 tracking-wide">
+            <i class="fas fa-shield-alt mr-1"></i>Administrador
+          </span>
         </div>
       </div>
     </div>
+  </nav>
+  {% endif %}
 
-    <!-- Footer -->
-    <footer class="main-footer text-center">
-      <strong>&copy; 2025 Biblioteca Digital.</strong> Creado por Eleazar
-      Pereira
-    </footer>
+  <!-- ═══════════════════════════════════
+       HERO — bloque full-bleed (fuera del contenedor max-w-7xl)
+       Cada página puede llenarlo o dejarlo vacío
+  ═══════════════════════════════════ -->
+  {% block hero %}{% endblock %}
 
-    <!-- Scripts -->
-    <!-- jQuery primero-->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- ═══════════════════════════════════
+       CONTENIDO PRINCIPAL
+  ═══════════════════════════════════ -->
+  <main class="flex-1 py-7" role="main">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf_viewer.min.js"></script>
+      <!-- Mensajes de Django — reemplaza clases Bootstrap alert -->
+      {% if messages %}
+      <div class="mb-5 space-y-2">
+        {% for message in messages %}
+        <div
+          role="alert"
+          x-data="{ show: true }" x-show="show"
+          x-transition:leave="transition duration-200" x-transition:leave-end="opacity-0"
+          class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium
+            {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200
+            {% elif message.tags == 'error' or message.tags == 'danger' %}bg-red-50 text-red-800 border border-red-200
+            {% elif message.tags == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200
+            {% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}"
+        >
+          {% if message.tags == 'success' %}<i class="fas fa-check-circle shrink-0"></i>
+          {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="fas fa-exclamation-circle shrink-0"></i>
+          {% elif message.tags == 'warning' %}<i class="fas fa-exclamation-triangle shrink-0"></i>
+          {% else %}<i class="fas fa-info-circle shrink-0"></i>{% endif %}
+          <span class="flex-1">{{ message }}</span>
+          <button @click="show = false" class="opacity-40 hover:opacity-100 transition-opacity text-xs ml-2">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
 
-    <!-- Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+      {% block content %}{% endblock %}
 
-    <!-- Swiper -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+    </div>
+  </main>
 
-    <!-- AdminLTE -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+  <!-- ═══════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════ -->
+  <footer class="bg-navy-dark border-t border-white/10" role="contentinfo">
 
-    <!-- Tu script personalizado -->
-    <script src="{% static 'js/script.js' %}"></script>
-  </body>
+    {# ── Cuerpo principal del footer ─── #}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+
+        {# Columna 1 — Marca y descripción #}
+        <div>
+          <a href="{% url 'library:dashboard' %}" class="inline-flex items-center gap-2 mb-4 group" style="text-decoration:none">
+            <span class="w-8 h-8 bg-gold/20 rounded-lg flex items-center justify-center text-gold text-sm">
+              <i class="fas fa-book-open"></i>
+            </span>
+            <span class="font-serif font-bold text-gold text-lg leading-none group-hover:text-gold-light transition-colors">
+              Biblioteca<span class="text-white/70 font-normal">&nbsp;Virtual</span>
+            </span>
+          </a>
+          <p class="text-white/45 text-sm leading-relaxed mb-5">
+            Un recurso ministerial digital para edificar la fe a través de libros,
+            estudios bíblicos y devocionales seleccionados.
+          </p>
+          {# Versículo decorativo #}
+          <div class="flex items-start gap-2">
+            <div class="w-0.5 h-full bg-gold/40 rounded-full shrink-0 mt-0.5" style="min-height:2.5rem"></div>
+            <p class="text-white/35 text-xs italic leading-relaxed font-serif">
+              "Tu palabra es una lámpara a mis pies y una luz en mi sendero."
+              <span class="block text-gold/50 not-italic mt-1">— Salmos 119:105</span>
+            </p>
+          </div>
+        </div>
+
+        {# Columna 2 — Navegación #}
+        <div>
+          <h3 class="text-gold/80 text-[0.68rem] font-semibold uppercase tracking-widest mb-4">
+            Acceso rápido
+          </h3>
+          <ul class="space-y-2.5">
+            <li>
+              <a href="{% url 'library:dashboard' %}"
+                 class="flex items-center gap-2 text-white/50 hover:text-gold text-sm transition-colors"
+                 style="text-decoration:none">
+                <i class="fas fa-home text-[10px] w-4 text-center text-gold/40"></i> Inicio
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'library:buscar_libro' %}"
+                 class="flex items-center gap-2 text-white/50 hover:text-gold text-sm transition-colors"
+                 style="text-decoration:none">
+                <i class="fas fa-search text-[10px] w-4 text-center text-gold/40"></i> Explorar biblioteca
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'library:mis_favoritos' %}"
+                 class="flex items-center gap-2 text-white/50 hover:text-gold text-sm transition-colors"
+                 style="text-decoration:none">
+                <i class="fas fa-heart text-[10px] w-4 text-center text-gold/40"></i> Mis favoritos
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'library:versiculo_diario' %}"
+                 class="flex items-center gap-2 text-white/50 hover:text-gold text-sm transition-colors"
+                 style="text-decoration:none">
+                <i class="fas fa-bible text-[10px] w-4 text-center text-gold/40"></i> Versículo del día
+              </a>
+            </li>
+            {% if user.is_authenticated %}
+            <li>
+              <a href="{% url 'library:solicitar_libro' %}"
+                 class="flex items-center gap-2 text-white/50 hover:text-gold text-sm transition-colors"
+                 style="text-decoration:none">
+                <i class="fas fa-book-medical text-[10px] w-4 text-center text-gold/40"></i> Solicitar libro
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+
+        {# Columna 3 — Ministerio / Info #}
+        <div>
+          <h3 class="text-gold/80 text-[0.68rem] font-semibold uppercase tracking-widest mb-4">
+            Pozo de Jacob
+          </h3>
+          <p class="text-white/45 text-sm leading-relaxed mb-5">
+            Plataforma al servicio del cuerpo de Cristo, diseñada para facilitar
+            el acceso al conocimiento bíblico y ministerial de forma gratuita.
+          </p>
+          <div class="flex flex-col gap-2 text-white/35 text-xs">
+            <span class="flex items-center gap-2">
+              <i class="fas fa-church text-gold/40 w-4 text-center"></i>
+              Uso ministerial y educativo
+            </span>
+            <span class="flex items-center gap-2">
+              <i class="fas fa-lock text-gold/40 w-4 text-center"></i>
+              Acceso privado y seguro
+            </span>
+            <span class="flex items-center gap-2">
+              <i class="fas fa-infinity text-gold/40 w-4 text-center"></i>
+              Contenido en constante crecimiento
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    {# ── Barra inferior — copyright ─── #}
+    <div class="border-t border-white/10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <p class="text-white/30 text-xs">
+          &copy; {% now "Y" %} <span class="text-gold/60 font-semibold">Biblioteca Virtual</span> — Todos los derechos reservados.
+        </p>
+        <p class="text-white/25 text-xs">
+          Desarrollado por <span class="text-white/45">Eleazar Pereira</span>
+        </p>
+      </div>
+    </div>
+
+  </footer>
+
+  {% block extra_scripts %}{% endblock %}
+
+</body>
 </html>
