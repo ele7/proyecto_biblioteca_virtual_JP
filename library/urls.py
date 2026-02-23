@@ -72,4 +72,8 @@ urlpatterns = [
 
     # ── F7 Auditoría (solo ADMIN) ─────────────────────────────────────────
     path('panel/auditoria/', views.auditoria_panel, name='auditoria_panel'),
+
+    # ── Reflexiones (solo ADMIN) ──────────────────────────────────────────
+    path('reflexiones/crear/',            views.crear_reflexion,    name='crear_reflexion'),
+    path('reflexiones/<int:pk>/eliminar/', views.eliminar_reflexion, name='eliminar_reflexion'),
 ]

@@ -263,6 +263,29 @@ class SolicitudLibro(models.Model):
         return f"'{self.titulo_sugerido}' por {self.usuario.email} [{self.estado}]"
 
 
+class Reflexion(models.Model):
+    """Reflexión / Artículo creado por un administrador para el dashboard."""
+    titulo         = models.CharField(max_length=200)
+    cuerpo         = models.TextField()
+    autor_nombre   = models.CharField(max_length=150, help_text="Nombre de quien escribió la reflexión")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    creado_por     = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reflexiones',
+    )
+
+    class Meta:
+        ordering            = ['-fecha_creacion']
+        verbose_name        = 'Reflexión'
+        verbose_name_plural = 'Reflexiones'
+
+    def __str__(self):
+        return f"{self.titulo} — {self.autor_nombre}"
+
+
 class AuditLog(models.Model):
     """F7 — Registro de acciones administrativas (crear/editar/eliminar)."""
     usuario         = models.ForeignKey(

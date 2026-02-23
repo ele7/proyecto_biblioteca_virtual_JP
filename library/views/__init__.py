@@ -32,6 +32,7 @@ from .exportacion import exportar_usuarios_excel, exportar_libros_excel
 from .versiculo import versiculo_diario
 from .auditoria import auditoria_panel
 from .media import servir_pdf_protegido, servir_portada_protegida
+from .reflexiones import crear_reflexion, eliminar_reflexion
 
 __all__ = [
     'login_view', 'logout_view', 'cambiar_password', 'olvido_password',
@@ -52,4 +53,6 @@ __all__ = [
     'auditoria_panel',
     'servir_pdf_protegido',
     'servir_portada_protegida',
+    'crear_reflexion',
+    'eliminar_reflexion',
 ]

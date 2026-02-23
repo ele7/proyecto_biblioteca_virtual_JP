@@ -1,5 +1,5 @@
 from django import forms
-from .models import Libro, Categoria, CustomUser, CategoriaPermitida, SolicitudLibro
+from .models import Libro, Categoria, CustomUser, CategoriaPermitida, SolicitudLibro, Reflexion
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
@@ -243,6 +243,32 @@ class CambioPasswordForm(forms.Form):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("Las contraseñas nuevas no coinciden.")
         return cleaned_data
+
+
+class ReflexionForm(forms.ModelForm):
+    class Meta:
+        model  = Reflexion
+        fields = ['titulo', 'cuerpo', 'autor_nombre']
+        widgets = {
+            'titulo': forms.TextInput(attrs={
+                'class': 'w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-navy focus:outline-none focus:border-gold transition-colors',
+                'placeholder': 'Título de la reflexión',
+            }),
+            'cuerpo': forms.Textarea(attrs={
+                'class': 'w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-navy focus:outline-none focus:border-gold transition-colors resize-none',
+                'rows': 5,
+                'placeholder': 'Escribe el contenido de la reflexión...',
+            }),
+            'autor_nombre': forms.TextInput(attrs={
+                'class': 'w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-navy focus:outline-none focus:border-gold transition-colors',
+                'placeholder': 'Nombre del autor',
+            }),
+        }
+        labels = {
+            'titulo':      'Título',
+            'cuerpo':      'Contenido',
+            'autor_nombre': '¿Quién lo escribió?',
+        }
 
 
 class OlvidoPasswordForm(forms.Form):

@@ -4,7 +4,8 @@ from django.core.paginator import Paginator
 from django.shortcuts import render
 
 from ..constants import RolNombre
-from ..models import Categoria, CategoriaPermitida, Favorito, HistorialLectura, Libro
+from ..forms import ReflexionForm
+from ..models import Categoria, CategoriaPermitida, Favorito, HistorialLectura, Libro, Reflexion
 from ..permissions import es_admin
 
 User = get_user_model()
@@ -84,6 +85,10 @@ def dashboard(request):
     total_favoritos = Favorito.objects.filter(usuario=usuario).count()
     total_leidos    = HistorialLectura.objects.filter(usuario=usuario).values('libro').distinct().count()
 
+    # ── Reflexiones (solo para admin) ─────────────────────────────────────
+    reflexiones     = Reflexion.objects.all()[:6] if usuario_es_admin else None
+    reflexion_form  = ReflexionForm() if usuario_es_admin else None
+
     return render(request, "library/dashboard.html", {
         'categorias':        categorias_data,
         'stats_admin':       stats_admin,
@@ -91,4 +96,6 @@ def dashboard(request):
         'historial_reciente': historial_reciente,
         'total_favoritos':   total_favoritos,
         'total_leidos':      total_leidos,
+        'reflexiones':       reflexiones,
+        'reflexion_form':    reflexion_form,
     })
