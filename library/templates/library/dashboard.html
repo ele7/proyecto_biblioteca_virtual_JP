@@ -435,6 +435,7 @@
   {% if user.is_admin %}
 
   {% if reflexiones %}
+  <div x-data="{ abierto: false, titulo: '', cuerpo: '', autor: '', fecha: '' }">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     {% for r in reflexiones %}
     <article class="bg-white rounded-2xl overflow-hidden shadow-bv-sm border border-stone-100
@@ -471,15 +472,58 @@
                    group-hover:text-navy-light transition-colors line-clamp-2">
           {{ r.titulo }}
         </h3>
-        <p class="text-gray-500 text-sm leading-relaxed line-clamp-4 mb-4 flex-1">
+        <p class="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-3 flex-1">
           {{ r.cuerpo }}
         </p>
-        <p class="text-gold text-xs font-semibold mt-auto flex items-center gap-1.5">
-          <i class="fas fa-pen-nib text-[10px]"></i> {{ r.autor_nombre }}
-        </p>
+        <div class="flex items-center justify-between mt-auto pt-3 border-t border-stone-50">
+          <p class="text-gold text-xs font-semibold flex items-center gap-1.5">
+            <i class="fas fa-pen-nib text-[10px]"></i> {{ r.autor_nombre }}
+          </p>
+          <button @click="titulo='{{ r.titulo|escapejs }}'; cuerpo='{{ r.cuerpo|escapejs }}'; autor='{{ r.autor_nombre|escapejs }}'; fecha='{{ r.fecha_creacion|date:'d M Y' }}'; abierto=true"
+                  class="inline-flex items-center gap-1.5 text-gold text-xs font-semibold hover:gap-2.5 transition-all">
+            Leer <i class="fas fa-arrow-right text-[10px]" aria-hidden="true"></i>
+          </button>
+        </div>
       </div>
     </article>
     {% endfor %}
+  </div>
+
+  {# Modal — leer reflexión completa #}
+  <div x-show="abierto"
+       x-cloak
+       class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-navy/60 backdrop-blur-sm" @click="abierto=false"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh]
+                flex flex-col z-10 overflow-hidden">
+      <div class="flex items-start justify-between p-6 pb-4 border-b border-stone-100 shrink-0">
+        <div class="flex-1 min-w-0 pr-4">
+          <p class="text-gold text-[0.68rem] font-semibold uppercase tracking-widest mb-0.5">Reflexión</p>
+          <h3 x-text="titulo" class="font-serif text-navy text-xl font-bold leading-snug"></h3>
+        </div>
+        <button @click="abierto=false"
+                class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full
+                       bg-stone-100 hover:bg-stone-200 text-gray-400 hover:text-navy transition-colors"
+                aria-label="Cerrar">
+          <i class="fas fa-times text-sm"></i>
+        </button>
+      </div>
+      <div class="overflow-y-auto p-6 flex-1">
+        <p x-text="cuerpo" class="text-gray-600 text-sm leading-relaxed whitespace-pre-line"></p>
+      </div>
+      <div class="px-6 py-4 border-t border-stone-100 flex items-center justify-between shrink-0 bg-stone-50/50">
+        <p class="text-gold text-xs font-semibold flex items-center gap-1.5">
+          <i class="fas fa-pen-nib text-[10px]"></i>
+          <span x-text="autor"></span>
+        </p>
+        <p class="text-gray-400 text-xs flex items-center gap-1.5">
+          <i class="far fa-calendar-alt text-[10px]"></i>
+          <span x-text="fecha"></span>
+        </p>
+      </div>
+    </div>
+  </div>
   </div>
 
   {% else %}
@@ -497,103 +541,95 @@
   {% endif %}
 
   {# ══════════════════════════════════════════════════ #}
-  {# VISTA LECTOR — artículos estáticos (sin cambios)   #}
+  {# VISTA LECTOR — reflexiones dinámicas              #}
   {# ══════════════════════════════════════════════════ #}
   {% else %}
 
+  {% if reflexiones %}
+  <div x-data="{ abierto: false, titulo: '', cuerpo: '', autor: '', fecha: '' }">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-    {# Artículo 1 — Devocional #}
+    {% for r in reflexiones %}
     <article class="bg-white rounded-2xl overflow-hidden shadow-bv-sm border border-stone-100
                     hover:shadow-bv-md transition-all duration-300 group flex flex-col">
-      <div class="h-48 bg-gradient-to-br from-navy to-navy-light relative overflow-hidden
+      <div class="h-36 bg-gradient-to-br from-navy to-navy-light relative overflow-hidden
                   flex items-center justify-center" aria-hidden="true">
-        <i class="fas fa-cross text-white/10 text-[7rem]"></i>
+        <i class="fas fa-feather-alt text-white/10 text-[5rem]"></i>
         <div class="absolute top-4 left-4">
           <span class="bg-gold text-navy text-[0.6rem] font-bold px-2.5 py-1
-                       rounded-full uppercase tracking-wider">Devocional</span>
+                       rounded-full uppercase tracking-wider">Reflexión</span>
         </div>
       </div>
       <div class="p-5 flex flex-col flex-1">
         <p class="text-gray-400 text-xs mb-2.5">
-          <i class="far fa-calendar-alt mr-1.5" aria-hidden="true"></i>Febrero 2025
+          <i class="far fa-calendar-alt mr-1.5" aria-hidden="true"></i>
+          {{ r.fecha_creacion|date:"d M Y" }}
         </p>
-        <h3 class="font-serif text-navy text-lg font-semibold leading-snug mb-3
-                   group-hover:text-navy-light transition-colors">
-          El poder transformador de la Palabra de Dios
+        <h3 class="font-serif text-navy text-lg font-semibold leading-snug mb-2
+                   group-hover:text-navy-light transition-colors line-clamp-2">
+          {{ r.titulo }}
         </h3>
-        <p class="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-5 flex-1">
-          "Lámpara es a mis pies tu palabra, y lumbrera a mi camino." Descubre cómo la Biblia
-          transforma cada área de tu vida cuando la aplicas diariamente con fe y obediencia.
+        <p class="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-3 flex-1">
+          {{ r.cuerpo }}
         </p>
-        <a href="#" class="inline-flex items-center gap-1.5 text-gold text-sm font-semibold
-                           hover:gap-3 transition-all mt-auto" style="text-decoration:none">
-          Leer reflexión <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
-        </a>
-      </div>
-    </article>
-
-    {# Artículo 2 — Ministerio #}
-    <article class="bg-white rounded-2xl overflow-hidden shadow-bv-sm border border-stone-100
-                    hover:shadow-bv-md transition-all duration-300 group flex flex-col">
-      <div class="h-48 bg-gradient-to-br from-amber-800 to-amber-950 relative overflow-hidden
-                  flex items-center justify-center" aria-hidden="true">
-        <i class="fas fa-dove text-white/10 text-[7rem]"></i>
-        <div class="absolute top-4 left-4">
-          <span class="bg-gold text-navy text-[0.6rem] font-bold px-2.5 py-1
-                       rounded-full uppercase tracking-wider">Ministerio</span>
+        <div class="flex items-center justify-between mt-auto pt-3 border-t border-stone-50">
+          <p class="text-gold text-xs font-semibold flex items-center gap-1.5">
+            <i class="fas fa-pen-nib text-[10px]"></i> {{ r.autor_nombre }}
+          </p>
+          <button @click="titulo='{{ r.titulo|escapejs }}'; cuerpo='{{ r.cuerpo|escapejs }}'; autor='{{ r.autor_nombre|escapejs }}'; fecha='{{ r.fecha_creacion|date:'d M Y' }}'; abierto=true"
+                  class="inline-flex items-center gap-1.5 text-gold text-xs font-semibold hover:gap-2.5 transition-all">
+            Leer <i class="fas fa-arrow-right text-[10px]" aria-hidden="true"></i>
+          </button>
         </div>
       </div>
-      <div class="p-5 flex flex-col flex-1">
-        <p class="text-gray-400 text-xs mb-2.5">
-          <i class="far fa-calendar-alt mr-1.5" aria-hidden="true"></i>Enero 2025
-        </p>
-        <h3 class="font-serif text-navy text-lg font-semibold leading-snug mb-3
-                   group-hover:text-navy-light transition-colors">
-          Discipulado: La gran comisión en el siglo XXI
-        </h3>
-        <p class="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-5 flex-1">
-          El llamado de Jesús a hacer discípulos sigue siendo tan vigente hoy. Exploramos
-          estrategias bíblicas para el discipulado en la era digital y en la comunidad local.
-        </p>
-        <a href="#" class="inline-flex items-center gap-1.5 text-gold text-sm font-semibold
-                           hover:gap-3 transition-all mt-auto" style="text-decoration:none">
-          Leer reflexión <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
-        </a>
-      </div>
     </article>
-
-    {# Artículo 3 — Oración #}
-    <article class="bg-white rounded-2xl overflow-hidden shadow-bv-sm border border-stone-100
-                    hover:shadow-bv-md transition-all duration-300 group flex flex-col">
-      <div class="h-48 bg-gradient-to-br from-slate-600 to-slate-900 relative overflow-hidden
-                  flex items-center justify-center" aria-hidden="true">
-        <i class="fas fa-pray text-white/10 text-[7rem]"></i>
-        <div class="absolute top-4 left-4">
-          <span class="bg-gold text-navy text-[0.6rem] font-bold px-2.5 py-1
-                       rounded-full uppercase tracking-wider">Oración</span>
-        </div>
-      </div>
-      <div class="p-5 flex flex-col flex-1">
-        <p class="text-gray-400 text-xs mb-2.5">
-          <i class="far fa-calendar-alt mr-1.5" aria-hidden="true"></i>Enero 2025
-        </p>
-        <h3 class="font-serif text-navy text-lg font-semibold leading-snug mb-3
-                   group-hover:text-navy-light transition-colors">
-          La oración: Comunicación vital con el Padre
-        </h3>
-        <p class="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-5 flex-1">
-          La oración no es un ritual, es una conversación íntima con el Dios vivo. Aprende a
-          desarrollar una vida de oración poderosa y efectiva basada en las Escrituras.
-        </p>
-        <a href="#" class="inline-flex items-center gap-1.5 text-gold text-sm font-semibold
-                           hover:gap-3 transition-all mt-auto" style="text-decoration:none">
-          Leer reflexión <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
-        </a>
-      </div>
-    </article>
-
+    {% endfor %}
   </div>
+
+  {# Modal — leer reflexión completa #}
+  <div x-show="abierto"
+       x-cloak
+       class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-navy/60 backdrop-blur-sm" @click="abierto=false"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh]
+                flex flex-col z-10 overflow-hidden">
+      <div class="flex items-start justify-between p-6 pb-4 border-b border-stone-100 shrink-0">
+        <div class="flex-1 min-w-0 pr-4">
+          <p class="text-gold text-[0.68rem] font-semibold uppercase tracking-widest mb-0.5">Reflexión</p>
+          <h3 x-text="titulo" class="font-serif text-navy text-xl font-bold leading-snug"></h3>
+        </div>
+        <button @click="abierto=false"
+                class="w-8 h-8 shrink-0 flex items-center justify-center rounded-full
+                       bg-stone-100 hover:bg-stone-200 text-gray-400 hover:text-navy transition-colors"
+                aria-label="Cerrar">
+          <i class="fas fa-times text-sm"></i>
+        </button>
+      </div>
+      <div class="overflow-y-auto p-6 flex-1">
+        <p x-text="cuerpo" class="text-gray-600 text-sm leading-relaxed whitespace-pre-line"></p>
+      </div>
+      <div class="px-6 py-4 border-t border-stone-100 flex items-center justify-between shrink-0 bg-stone-50/50">
+        <p class="text-gold text-xs font-semibold flex items-center gap-1.5">
+          <i class="fas fa-pen-nib text-[10px]"></i>
+          <span x-text="autor"></span>
+        </p>
+        <p class="text-gray-400 text-xs flex items-center gap-1.5">
+          <i class="far fa-calendar-alt text-[10px]"></i>
+          <span x-text="fecha"></span>
+        </p>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  {% else %}
+  <div class="bg-white rounded-2xl border border-stone-100 shadow-bv-sm p-10 text-center">
+    <i class="fas fa-scroll text-5xl text-gray-200 mb-4 block" aria-hidden="true"></i>
+    <h4 class="font-serif text-navy text-lg mb-2">Próximamente</h4>
+    <p class="text-gray-400 text-sm">Se publicarán reflexiones y artículos de edificación espiritual.</p>
+  </div>
+  {% endif %}
+
   {% endif %}
 
 </section>

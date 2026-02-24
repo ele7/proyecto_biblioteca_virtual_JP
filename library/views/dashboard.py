@@ -85,8 +85,8 @@ def dashboard(request):
     total_favoritos = Favorito.objects.filter(usuario=usuario).count()
     total_leidos    = HistorialLectura.objects.filter(usuario=usuario).values('libro').distinct().count()
 
-    # ── Reflexiones (solo para admin) ─────────────────────────────────────
-    reflexiones     = Reflexion.objects.all()[:6] if usuario_es_admin else None
+    # ── Reflexiones (admin y lector) ──────────────────────────────────────
+    reflexiones     = Reflexion.objects.all()[:6]
     reflexion_form  = ReflexionForm() if usuario_es_admin else None
 
     return render(request, "library/dashboard.html", {
