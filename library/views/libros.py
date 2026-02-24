@@ -6,8 +6,9 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.text import slugify
 
 from ..forms import CargaMasivaLibrosForm, LibroForm
 from ..models import Categoria, EstadisticaUsuario, HistorialLectura, Libro, ProgresoLectura
@@ -223,8 +224,14 @@ def descargar_plantilla_libros(request):
 # ─────────────────────────────────────────────────────────────────────────────
 
 @login_required
-def leer_libro(request, libro_id, titulo_slug=None):
-    libro = get_object_or_404(Libro, id=libro_id)
+def leer_libro(request, autor_slug, titulo_slug):
+    libro = next(
+        (l for l in Libro.objects.all()
+         if slugify(l.autor) == autor_slug and slugify(l.titulo) == titulo_slug),
+        None,
+    )
+    if libro is None:
+        raise Http404("Libro no encontrado.")
     if not usuario_puede_ver_libro(request.user, libro):
         messages.error(request, "No tienes acceso a este libro.")
         return redirect('library:dashboard')

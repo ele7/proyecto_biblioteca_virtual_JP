@@ -739,7 +739,7 @@
 
           <div class="mt-auto">
             {% if user.is_admin %}
-            <a href="{% url 'library:leer_libro' libro.id libro.titulo|slugify %}"
+            <a href="{% url 'library:leer_libro' libro.autor|slugify libro.titulo|slugify %}"
                onclick="event.stopPropagation()"
                class="inline-flex items-center gap-1.5 bg-navy text-white text-xs font-medium
                       px-3 py-1.5 rounded-full hover:bg-navy-light transition-colors"

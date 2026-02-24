@@ -55,7 +55,7 @@
       {# Botones de acción #}
       <div class="flex items-center gap-3 flex-wrap">
         {% if libro.archivo %}
-        <a href="{% url 'library:leer_libro' libro.id libro.titulo|slugify %}"
+        <a href="{% url 'library:leer_libro' libro.autor|slugify libro.titulo|slugify %}"
            class="inline-flex items-center gap-2 bg-navy text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-navy-light transition-colors shadow-bv-sm"
            style="text-decoration:none">
           <i class="fas fa-book-reader"></i> Leer libro

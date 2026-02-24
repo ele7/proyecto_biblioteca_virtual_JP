@@ -111,7 +111,7 @@
             </td>
             <td class="px-4 py-3">
               {% if libro.archivo %}
-              <a href="{% url 'library:leer_libro' libro.id libro.titulo|slugify %}"
+              <a href="{% url 'library:leer_libro' libro.autor|slugify libro.titulo|slugify %}"
                  class="inline-flex items-center gap-1 text-xs text-navy border border-stone-200 px-2.5 py-1 rounded-lg hover:bg-navy hover:text-white hover:border-navy transition-colors"
                  style="text-decoration:none">
                 <i class="fas fa-file-pdf text-[0.65rem]"></i> PDF
