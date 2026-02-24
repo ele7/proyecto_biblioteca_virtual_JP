@@ -38,7 +38,7 @@ urlpatterns = [
     path('libros/carga-masiva/plantilla/',       views.descargar_plantilla_libros, name='libros_plantilla'),
 
     # ── Libros (ADMIN y LECTOR) ────────────────────────────────────────────
-    path('leer/<int:libro_id>/',              views.leer_libro,                   name='leer_libro'),
+    path('leer/<int:libro_id>/<slug:titulo_slug>/', views.leer_libro,               name='leer_libro'),
     path('buscar/',                           views.buscar_libro,                 name='buscar_libro'),
     path('categoria/<int:categoria_id>/',     views.libros_por_categoria_usuario, name='libros_por_categoria'),
     path('libro/<int:libro_id>/',             views.detalle_libro_usuario,        name='detalle_libros'),

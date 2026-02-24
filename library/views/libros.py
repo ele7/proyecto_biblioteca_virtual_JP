@@ -223,7 +223,7 @@ def descargar_plantilla_libros(request):
 # ─────────────────────────────────────────────────────────────────────────────
 
 @login_required
-def leer_libro(request, libro_id):
+def leer_libro(request, libro_id, titulo_slug=None):
     libro = get_object_or_404(Libro, id=libro_id)
     if not usuario_puede_ver_libro(request.user, libro):
         messages.error(request, "No tienes acceso a este libro.")
