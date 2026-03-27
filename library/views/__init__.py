@@ -7,6 +7,7 @@ from .usuarios import (
     usuarios_listar,
     usuarios_crear,
     usuarios_editar,
+    usuarios_eliminar,
     carga_masiva_usuarios,
     descargar_plantilla_usuarios,
 )
@@ -15,6 +16,7 @@ from .libros import (
     listar_libros,
     agregar_libro,
     editar_libro,
+    eliminar_libro,
     libros_por_categoria,
     carga_masiva_libros,
     descargar_plantilla_libros,
@@ -37,10 +39,10 @@ from .reflexiones import crear_reflexion, eliminar_reflexion
 __all__ = [
     'login_view', 'logout_view', 'cambiar_password', 'olvido_password',
     'dashboard',
-    'usuarios_listar', 'usuarios_crear', 'usuarios_editar',
+    'usuarios_listar', 'usuarios_crear', 'usuarios_editar', 'usuarios_eliminar',
     'carga_masiva_usuarios', 'descargar_plantilla_usuarios',
     'categorias_listar', 'categorias_crear', 'categorias_editar',
-    'listar_libros', 'agregar_libro', 'editar_libro', 'libros_por_categoria',
+    'listar_libros', 'agregar_libro', 'editar_libro', 'eliminar_libro', 'libros_por_categoria',
     'carga_masiva_libros', 'descargar_plantilla_libros',
     'leer_libro', 'libros_usuario', 'libros_por_categoria_usuario',
     'detalle_libro_usuario', 'buscar_libro',

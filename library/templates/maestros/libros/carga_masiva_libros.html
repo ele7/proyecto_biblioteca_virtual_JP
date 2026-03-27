@@ -26,14 +26,19 @@
   {% if resultado %}
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-    {# Creados #}
+    {# Creados / Actualizados #}
     <div class="bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-4 flex items-center gap-4">
       <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
         <i class="fas fa-check-circle text-emerald-600 text-lg"></i>
       </div>
       <div>
+        {% if modo == 'actualizar' %}
+        <p class="text-2xl font-bold text-emerald-700">{{ resultado.actualizados }}</p>
+        <p class="text-xs text-emerald-600 font-medium">Libro(s) actualizado(s)</p>
+        {% else %}
         <p class="text-2xl font-bold text-emerald-700">{{ resultado.creados }}</p>
         <p class="text-xs text-emerald-600 font-medium">Libro(s) creado(s)</p>
+        {% endif %}
       </div>
     </div>
 
@@ -140,6 +145,34 @@
     <form method="post" enctype="multipart/form-data" class="space-y-5">
       {% csrf_token %}
 
+      {# Selector de modo #}
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-gray-700">Modo de operación</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+          <label id="label-crear"
+                 class="flex items-start gap-3 border-2 border-navy bg-navy/5 rounded-xl px-4 py-3 cursor-pointer transition-colors">
+            <input type="radio" name="modo" value="crear" checked
+                   class="mt-0.5 accent-navy shrink-0" onchange="actualizarModo()">
+            <div>
+              <p class="text-sm font-semibold text-navy">Crear nuevos libros</p>
+              <p class="text-xs text-gray-500 mt-0.5">Agrega libros que aún no existen en el sistema. Los duplicados se omiten.</p>
+            </div>
+          </label>
+
+          <label id="label-actualizar"
+                 class="flex items-start gap-3 border-2 border-stone-200 rounded-xl px-4 py-3 cursor-pointer transition-colors">
+            <input type="radio" name="modo" value="actualizar"
+                   class="mt-0.5 accent-navy shrink-0" onchange="actualizarModo()">
+            <div>
+              <p class="text-sm font-semibold text-gray-700">Actualizar libros existentes</p>
+              <p class="text-xs text-gray-500 mt-0.5">Modifica datos de libros ya registrados. Solo actualiza campos no vacíos.</p>
+            </div>
+          </label>
+
+        </div>
+      </div>
+
       {# Campo Excel #}
       <div class="space-y-1.5">
         <label class="text-sm font-medium text-gray-700 flex items-center gap-1.5">
@@ -222,6 +255,28 @@
 </div>
 
 <script>
+  // ── Selector de modo ─────────────────────────────────────────────────────
+  function actualizarModo() {
+    var esActualizar = document.querySelector('input[name="modo"][value="actualizar"]').checked;
+    var labelCrear      = document.getElementById('label-crear');
+    var labelActualizar = document.getElementById('label-actualizar');
+    var btnTexto        = document.getElementById('btn-texto');
+
+    if (esActualizar) {
+      labelActualizar.classList.add('border-navy', 'bg-navy/5');
+      labelActualizar.classList.remove('border-stone-200');
+      labelCrear.classList.remove('border-navy', 'bg-navy/5');
+      labelCrear.classList.add('border-stone-200');
+      btnTexto.textContent = 'Procesar Actualización';
+    } else {
+      labelCrear.classList.add('border-navy', 'bg-navy/5');
+      labelCrear.classList.remove('border-stone-200');
+      labelActualizar.classList.remove('border-navy', 'bg-navy/5');
+      labelActualizar.classList.add('border-stone-200');
+      btnTexto.textContent = 'Procesar Carga';
+    }
+  }
+
   // ── Límites ───────────────────────────────────────────────────────────────
   var LIMITE_ZIP_MB   = 90;   // Cloudflare free/pro: 100 MB — margen de seguridad
   var LIMITE_EXCEL_MB = 10;   // Un Excel con miles de filas no debería superar esto

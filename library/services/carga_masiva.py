@@ -365,3 +365,154 @@ def procesar_carga_libros(excel_file, zip_file) -> dict:
             )
 
     return resultado
+
+
+def procesar_actualizacion_libros(excel_file, zip_file) -> dict:
+    """
+    Actualiza libros existentes desde un Excel + ZIP opcional.
+
+    - Busca cada libro por ISBN (si viene) o por título + autor.
+    - Actualiza solo los campos no vacíos del Excel.
+    - Si el ZIP trae un nuevo PDF o portada, los reemplaza.
+    - Si el libro no existe, lo reporta como advertencia (no lo crea).
+    """
+    resultado = {
+        'actualizados': 0,
+        'errores':      [],
+        'advertencias': [],
+    }
+
+    # ── 1. Leer el Excel ──────────────────────────────────────────────────────
+    try:
+        df = pd.read_excel(excel_file, dtype=str)
+    except Exception as exc:
+        resultado['errores'].append(f"No se pudo leer el Excel: {exc}")
+        return resultado
+
+    df.columns = [_quitar_tildes(str(c).strip().lower()) for c in df.columns]
+
+    if 'isbn' not in df.columns and ('titulo' not in df.columns or 'autor' not in df.columns):
+        resultado['errores'].append(
+            "El Excel debe tener columna 'isbn', o bien 'titulo' y 'autor' para identificar los libros."
+        )
+        return resultado
+
+    if df.empty:
+        resultado['advertencias'].append("El Excel está vacío, no hay filas que procesar.")
+        return resultado
+
+    # ── 2. Leer el ZIP ────────────────────────────────────────────────────────
+    contenidos_zip = {}
+    if zip_file is not None:
+        zip_bytes = zip_file.read()
+        contenidos_zip = _extraer_contenidos_zip(zip_bytes)
+        if not contenidos_zip:
+            resultado['advertencias'].append(
+                "El ZIP estaba vacío o dañado. Se actualizarán los libros sin reemplazar archivos."
+            )
+
+    # ── 3. Cachear categorías ─────────────────────────────────────────────────
+    cache_categorias = {cat.nombre.lower(): cat for cat in Categoria.objects.all()}
+
+    # ── 4. Procesar fila por fila ─────────────────────────────────────────────
+    for indice_fila, row in df.iterrows():
+        num_display = int(indice_fila) + 2
+
+        isbn   = _valor_str(row.get('isbn', ''))
+        titulo = _valor_str(row.get('titulo', ''))
+        autor  = _valor_str(row.get('autor', ''))
+
+        # ── 4a. Buscar libro existente ────────────────────────────────────────
+        libro = None
+        if isbn:
+            libro = Libro.objects.filter(isbn=isbn).first()
+        elif titulo and autor:
+            libro = Libro.objects.filter(titulo__iexact=titulo, autor__iexact=autor).first()
+        else:
+            resultado['errores'].append(
+                f"Fila {num_display}: sin ISBN ni título+autor para identificar el libro. Fila omitida."
+            )
+            continue
+
+        if libro is None:
+            resultado['advertencias'].append(
+                f"Fila {num_display} ('{titulo or isbn}'): no se encontró en la base de datos. Fila omitida."
+            )
+            continue
+
+        # ── 4b. Actualizar campos no vacíos ───────────────────────────────────
+        campos_modificados = []
+        try:
+            with transaction.atomic():
+                if titulo and titulo.lower() != libro.titulo.lower():
+                    libro.titulo = titulo
+                    campos_modificados.append('titulo')
+
+                if autor and autor.lower() != libro.autor.lower():
+                    libro.autor = autor
+                    campos_modificados.append('autor')
+
+                descripcion = _valor_str(row.get('descripcion', ''))
+                if descripcion:
+                    libro.descripcion = descripcion
+                    campos_modificados.append('descripcion')
+
+                año_raw = row.get('año', '') if 'año' in df.columns else ''
+                anio = _valor_año(año_raw)
+                if anio is not None:
+                    libro.año = anio
+                    campos_modificados.append('año')
+
+                categoria_nombre = _valor_str(row.get('categoria', ''))
+                if categoria_nombre:
+                    categoria_obj = cache_categorias.get(categoria_nombre.lower())
+                    if categoria_obj:
+                        libro.categoria = categoria_obj
+                        campos_modificados.append('categoria')
+                    else:
+                        resultado['advertencias'].append(
+                            f"Fila {num_display} ('{libro.titulo}'): categoría '{categoria_nombre}' "
+                            f"no existe. Se mantiene la categoría actual."
+                        )
+
+                # ── 4c. Reemplazar archivos del ZIP ───────────────────────────
+                nombre_pdf     = _valor_str(row.get('archivo_pdf', ''))
+                nombre_portada = _valor_str(row.get('portada', ''))
+
+                if nombre_pdf:
+                    clave_pdf = _normalizar_nombre(nombre_pdf)
+                    bytes_pdf = contenidos_zip.get(clave_pdf)
+                    if bytes_pdf:
+                        libro.archivo.save(nombre_pdf, ContentFile(bytes_pdf), save=False)
+                        campos_modificados.append('archivo_pdf')
+                    else:
+                        resultado['advertencias'].append(
+                            f"Fila {num_display} ('{libro.titulo}'): '{nombre_pdf}' no encontrado en el ZIP."
+                        )
+
+                if nombre_portada:
+                    clave_portada = _normalizar_nombre(nombre_portada)
+                    bytes_portada = contenidos_zip.get(clave_portada)
+                    if bytes_portada:
+                        libro.portada.save(nombre_portada, ContentFile(bytes_portada), save=False)
+                        campos_modificados.append('portada')
+                    else:
+                        resultado['advertencias'].append(
+                            f"Fila {num_display} ('{libro.titulo}'): '{nombre_portada}' no encontrado en el ZIP."
+                        )
+
+                libro.save()
+                resultado['actualizados'] += 1
+
+                if not campos_modificados:
+                    resultado['advertencias'].append(
+                        f"Fila {num_display} ('{libro.titulo}'): no había cambios que aplicar."
+                    )
+
+        except Exception as exc:
+            logger.exception("Error actualizando '%s' (fila %d): %s", libro.titulo, num_display, exc)
+            resultado['errores'].append(
+                f"Fila {num_display} ('{libro.titulo}'): error inesperado al actualizar: {exc}"
+            )
+
+    return resultado

@@ -109,6 +109,17 @@ def libros_por_categoria(request, categoria_id):
 
 
 @admin_required
+def eliminar_libro(request, libro_id):
+    libro = get_object_or_404(Libro, id=libro_id)
+    if request.method == 'POST':
+        titulo = str(libro)
+        libro.delete()
+        _registrar_auditoria(request, 'ELIMINAR', 'Libro', titulo)
+        messages.success(request, f'Libro "{titulo}" eliminado correctamente.')
+    return redirect('library:listar_libros')
+
+
+@admin_required
 def carga_masiva_libros(request):
     """
     GET:  Muestra el formulario vacío con instrucciones.
@@ -122,16 +133,20 @@ def carga_masiva_libros(request):
     if request.method == "POST":
         form = CargaMasivaLibrosForm(request.POST, request.FILES)
         if form.is_valid():
+            from ..services.carga_masiva import procesar_actualizacion_libros
             excel_file = request.FILES['archivo_excel']
             zip_file   = request.FILES.get('archivo_zip')
+            modo       = form.cleaned_data['modo']
 
-            resultado = procesar_carga_libros(excel_file, zip_file)
+            if modo == 'actualizar':
+                resultado = procesar_actualizacion_libros(excel_file, zip_file)
+                if resultado['actualizados'] > 0:
+                    messages.success(request, f"{resultado['actualizados']} libro(s) actualizado(s) exitosamente.")
+            else:
+                resultado = procesar_carga_libros(excel_file, zip_file)
+                if resultado['creados'] > 0:
+                    messages.success(request, f"{resultado['creados']} libro(s) creado(s) exitosamente.")
 
-            if resultado['creados'] > 0:
-                messages.success(
-                    request,
-                    f"{resultado['creados']} libro(s) creado(s) exitosamente."
-                )
             if resultado['errores']:
                 messages.error(
                     request,
@@ -148,6 +163,7 @@ def carga_masiva_libros(request):
     return render(request, 'maestros/libros/carga_masiva_libros.html', {
         'form':      form,
         'resultado': resultado,
+        'modo':      form.cleaned_data.get('modo', 'crear') if resultado else 'crear',
     })
 
 

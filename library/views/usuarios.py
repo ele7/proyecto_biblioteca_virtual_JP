@@ -117,6 +117,20 @@ def usuarios_editar(request, pk):
 
 
 @admin_required
+def usuarios_eliminar(request, pk):
+    usuario = get_object_or_404(CustomUser, pk=pk)
+    if request.method == 'POST':
+        if usuario == request.user:
+            messages.error(request, 'No puedes eliminar tu propio usuario.')
+            return redirect('library:usuarios_listar')
+        nombre = str(usuario)
+        usuario.delete()
+        _registrar_auditoria(request, 'ELIMINAR', 'CustomUser', nombre)
+        messages.success(request, f'Usuario "{nombre}" eliminado correctamente.')
+    return redirect('library:usuarios_listar')
+
+
+@admin_required
 def carga_masiva_usuarios(request):
     """
     GET:  Muestra el formulario vacío con instrucciones y botón de plantilla.

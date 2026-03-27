@@ -21,6 +21,7 @@ urlpatterns = [
     path('usuarios/',                     views.usuarios_listar,      name='usuarios_listar'),
     path('usuarios/crear/',               views.usuarios_crear,       name='usuarios_crear'),
     path('usuarios/editar/<int:pk>/',     views.usuarios_editar,      name='usuarios_editar'),
+    path('usuarios/eliminar/<int:pk>/',   views.usuarios_eliminar,    name='usuarios_eliminar'),
     path('usuarios/carga-masiva/',        views.carga_masiva_usuarios,        name='usuarios_carga_masiva'),
     path('usuarios/carga-masiva/plantilla/', views.descargar_plantilla_usuarios, name='usuarios_plantilla'),
 
@@ -33,6 +34,7 @@ urlpatterns = [
     path('libros/',                              views.listar_libros,            name='listar_libros'),
     path('libros/agregar/',                      views.agregar_libro,            name='agregar_libro'),
     path('libros/editar/<int:libro_id>/',        views.editar_libro,             name='editar_libro'),
+    path('libros/eliminar/<int:libro_id>/',      views.eliminar_libro,           name='eliminar_libro'),
     path('libros/categoria/<int:categoria_id>/', views.libros_por_categoria,     name='admin_libros_por_categoria'),
     path('libros/carga-masiva/',                 views.carga_masiva_libros,      name='libros_carga_masiva'),
     path('libros/carga-masiva/plantilla/',       views.descargar_plantilla_libros, name='libros_plantilla'),

@@ -180,6 +180,16 @@ class CargaMasivaLibrosForm(forms.Form):
     Acepta un Excel (.xlsx) con los metadatos de los libros y un ZIP
     opcional con los PDFs y portadas referenciados en el Excel.
     """
+    MODO_CHOICES = [
+        ('crear',      'Crear nuevos libros'),
+        ('actualizar', 'Actualizar libros existentes'),
+    ]
+    modo = forms.ChoiceField(
+        choices=MODO_CHOICES,
+        initial='crear',
+        widget=forms.RadioSelect,
+        label='Modo de operación',
+    )
     archivo_excel = forms.FileField(
         label="Archivo Excel (.xlsx)",
         help_text=(
