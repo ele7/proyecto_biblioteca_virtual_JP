@@ -29,7 +29,7 @@ class Libro(models.Model):
     categoria   = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name="libros")
     portada     = models.ImageField(upload_to="portadas/", blank=True, null=True)
     archivo     = models.FileField(upload_to=renombrar_archivo, blank=True, null=True)
-    año         = models.PositiveIntegerField()
+    año         = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.titulo} - {self.autor}"

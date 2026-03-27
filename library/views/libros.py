@@ -127,9 +127,6 @@ def carga_masiva_libros(request):
 
             resultado = procesar_carga_libros(excel_file, zip_file)
 
-            for libro in resultado.get('libros_creados', []):
-                enviar_notificacion_libro(libro)
-
             if resultado['creados'] > 0:
                 messages.success(
                     request,

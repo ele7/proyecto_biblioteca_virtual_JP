@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py makemigrations:*)",
+      "Bash(python manage.py migrate:*)",
+      "Bash(python manage.py:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(curl:*)",
+      "Bash(python -c:*)",
+      "Bash(pip show:*)",
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(venv/Scripts/python manage.py check:*)",
+      "Bash(venv/Scripts/python:*)",
+      "Bash(findstr:*)",
+      "Bash(set:*)",
+      "Bash(sshpass -p 'tUfVPFTKkbxF' ssh -o StrictHostKeyChecking=no root@77.42.94.254 \"echo ''Conexion OK'' && lsb_release -a && python3 --version && nginx -v 2>&1 | head -1\")",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(scp:*)",
+      "Bash(nslookup:*)",
+      "Bash(ipconfig:*)"
+    ]
+  }
+}

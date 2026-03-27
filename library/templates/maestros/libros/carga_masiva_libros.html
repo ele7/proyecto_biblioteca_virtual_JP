@@ -111,12 +111,12 @@
     <ol class="list-decimal list-inside space-y-1.5 text-sm text-blue-700 pl-1">
       <li>Descarga la <strong>plantilla Excel</strong> con el botón de arriba.</li>
       <li>
-        Completa las columnas:
+        Columnas obligatorias:
         <code class="bg-blue-100 px-1 rounded text-xs">titulo</code>,
-        <code class="bg-blue-100 px-1 rounded text-xs">autor</code>,
-        <code class="bg-blue-100 px-1 rounded text-xs">año</code> y
-        <code class="bg-blue-100 px-1 rounded text-xs">categoria</code>
-        son <strong>obligatorias</strong>.
+        <code class="bg-blue-100 px-1 rounded text-xs">autor</code> y
+        <code class="bg-blue-100 px-1 rounded text-xs">categoria</code>.
+        <code class="bg-blue-100 px-1 rounded text-xs">año</code>
+        es opcional.
       </li>
       <li>
         En <code class="bg-blue-100 px-1 rounded text-xs">archivo_pdf</code> y
@@ -148,6 +148,7 @@
           <span class="text-red-500 ml-0.5">*</span>
         </label>
         {{ form.archivo_excel }}
+        <p id="info-excel" class="text-xs text-gray-400 hidden"></p>
         {% if form.archivo_excel.help_text %}
         <p class="text-xs text-gray-400">{{ form.archivo_excel.help_text }}</p>
         {% endif %}
@@ -164,6 +165,7 @@
           <span class="text-xs text-gray-400 font-normal ml-1">(opcional)</span>
         </label>
         {{ form.archivo_zip }}
+        <p id="info-zip" class="text-xs text-gray-400 hidden"></p>
         {% if form.archivo_zip.help_text %}
         <p class="text-xs text-gray-400">{{ form.archivo_zip.help_text }}</p>
         {% endif %}
@@ -172,11 +174,21 @@
         {% endif %}
       </div>
 
+      {# Alerta de tamaño #}
+      <div id="alerta-tamano" class="hidden bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-3">
+        <i class="fas fa-exclamation-circle text-red-500 mt-0.5 shrink-0"></i>
+        <div class="text-sm text-red-700">
+          <p class="font-semibold" id="alerta-titulo">Archivo demasiado grande</p>
+          <p id="alerta-detalle" class="mt-0.5"></p>
+        </div>
+      </div>
+
       {# Botones #}
       <div class="flex items-center gap-3 pt-2 flex-wrap">
-        <button type="submit"
+        <button type="submit" id="btn-procesar"
                 class="inline-flex items-center gap-2 bg-navy hover:bg-navy-light text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
-          <i class="fas fa-upload"></i> Procesar Carga
+          <i class="fas fa-upload" id="btn-icon"></i>
+          <span id="btn-texto">Procesar Carga</span>
         </button>
         <a href="{% url 'library:listar_libros' %}"
            class="inline-flex items-center gap-2 border border-stone-200 text-navy text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-navy hover:text-white hover:border-navy transition-colors"
@@ -195,5 +207,111 @@
     </form>
   </div>
 
+  {# ── Overlay de carga ──────────────────────────────────────────────────────── #}
+  <div id="overlay-carga"
+       class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center gap-4"
+       style="background:rgba(15,28,53,0.75)">
+    <svg class="animate-spin h-12 w-12 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+    <p class="text-white font-semibold text-lg">Procesando carga, por favor espera…</p>
+    <p class="text-blue-200 text-sm">Esto puede tardar algunos segundos según la cantidad de archivos.</p>
+  </div>
+
 </div>
+
+<script>
+  // ── Límites ───────────────────────────────────────────────────────────────
+  var LIMITE_ZIP_MB   = 90;   // Cloudflare free/pro: 100 MB — margen de seguridad
+  var LIMITE_EXCEL_MB = 10;   // Un Excel con miles de filas no debería superar esto
+
+  function formatMB(bytes) {
+    return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+  }
+
+  function colorTamano(bytes, limiteMB) {
+    var mb = bytes / 1024 / 1024;
+    if (mb > limiteMB)           return 'text-red-600 font-semibold';
+    if (mb > limiteMB * 0.75)    return 'text-amber-600 font-semibold';
+    return 'text-emerald-600';
+  }
+
+  // ── Indicador de tamaño al seleccionar archivo ───────────────────────────
+  document.getElementById('id_archivo_excel').addEventListener('change', function () {
+    var info = document.getElementById('info-excel');
+    if (!this.files.length) { info.classList.add('hidden'); return; }
+    var f = this.files[0];
+    info.className = 'text-xs ' + colorTamano(f.size, LIMITE_EXCEL_MB);
+    info.textContent = 'Tamaño: ' + formatMB(f.size);
+    info.classList.remove('hidden');
+    validarTamanos();
+  });
+
+  document.getElementById('id_archivo_zip').addEventListener('change', function () {
+    var info = document.getElementById('info-zip');
+    if (!this.files.length) { info.classList.add('hidden'); return; }
+    var f = this.files[0];
+    info.className = 'text-xs ' + colorTamano(f.size, LIMITE_ZIP_MB);
+    info.textContent = 'Tamaño: ' + formatMB(f.size);
+    info.classList.remove('hidden');
+    validarTamanos();
+  });
+
+  // ── Validar y mostrar/ocultar alerta ─────────────────────────────────────
+  function validarTamanos() {
+    var inputZip   = document.getElementById('id_archivo_zip');
+    var inputExcel = document.getElementById('id_archivo_excel');
+    var alerta     = document.getElementById('alerta-tamano');
+    var alertaTit  = document.getElementById('alerta-titulo');
+    var alertaDet  = document.getElementById('alerta-detalle');
+    var btn        = document.getElementById('btn-procesar');
+
+    var zipMB   = inputZip.files.length   ? inputZip.files[0].size   / 1024 / 1024 : 0;
+    var excelMB = inputExcel.files.length ? inputExcel.files[0].size / 1024 / 1024 : 0;
+
+    var errores = [];
+    if (zipMB > LIMITE_ZIP_MB)
+      errores.push('El ZIP pesa ' + zipMB.toFixed(1) + ' MB — supera el límite de ' + LIMITE_ZIP_MB + ' MB permitido por el proxy. Divide el ZIP en lotes más pequeños.');
+    if (excelMB > LIMITE_EXCEL_MB)
+      errores.push('El Excel pesa ' + excelMB.toFixed(1) + ' MB — verifica que no tenga imágenes u hojas extra.');
+
+    if (errores.length) {
+      alertaTit.textContent = errores.length > 1 ? 'Archivos demasiado grandes' : 'Archivo demasiado grande';
+      alertaDet.textContent = errores.join(' | ');
+      alerta.classList.remove('hidden');
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+      alerta.classList.add('hidden');
+      btn.disabled = false;
+      btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+  }
+
+  // ── Spinner al enviar ─────────────────────────────────────────────────────
+  document.querySelector('form').addEventListener('submit', function (e) {
+    var inputZip   = document.getElementById('id_archivo_zip');
+    var inputExcel = document.getElementById('id_archivo_excel');
+    var zipMB   = inputZip.files.length   ? inputZip.files[0].size   / 1024 / 1024 : 0;
+    var excelMB = inputExcel.files.length ? inputExcel.files[0].size / 1024 / 1024 : 0;
+
+    // Doble comprobación por si acaso
+    if (zipMB > LIMITE_ZIP_MB || excelMB > LIMITE_EXCEL_MB) {
+      e.preventDefault();
+      return;
+    }
+
+    var btn   = document.getElementById('btn-procesar');
+    var icon  = document.getElementById('btn-icon');
+    var texto = document.getElementById('btn-texto');
+
+    btn.disabled = true;
+    btn.classList.add('opacity-70', 'cursor-not-allowed');
+    icon.className = 'fas fa-spinner fa-spin';
+    texto.textContent = 'Procesando…';
+
+    document.getElementById('overlay-carga').classList.remove('hidden');
+  });
+</script>
 {% endblock %}

@@ -724,7 +724,7 @@
 {# ══════════════════════════════════════════════════════ #}
 <div class="space-y-10">
   {% for categoria in categorias %}
-  <section>
+  <section id="cat-{{ categoria.id }}">
 
     {# Encabezado de categoría #}
     <a href="{% url 'library:libros_por_categoria' categoria.id %}"
@@ -745,7 +745,7 @@
     </a>
 
     {# Grid de tarjetas de libros #}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <div id="pag-{{ categoria.id }}" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 scroll-mt-24">
       {% for libro in categoria.libros %}
       <div class="group bg-white rounded-xl shadow-bv-sm border border-stone-100 overflow-hidden
                   hover:shadow-bv-md hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer"
@@ -807,7 +807,7 @@
     {% if categoria.total_pages > 1 %}
     <nav aria-label="Páginas de {{ categoria.nombre }}" class="flex justify-center mt-5 gap-1 flex-wrap">
       {% if categoria.has_previous %}
-      <a href="?page_{{ categoria.id }}={{ categoria.previous_page_number }}"
+      <a href="?page_{{ categoria.id }}={{ categoria.previous_page_number }}#pag-{{ categoria.id }}"
          class="px-3 py-1.5 text-xs border border-stone-200 rounded-lg text-navy
                 hover:bg-navy hover:text-white transition-colors"
          style="text-decoration:none">← Anterior</a>
@@ -818,7 +818,7 @@
       {% endif %}
 
       {% for num in categoria.page_range %}
-      <a href="?page_{{ categoria.id }}={{ num }}"
+      <a href="?page_{{ categoria.id }}={{ num }}#pag-{{ categoria.id }}"
          class="px-3 py-1.5 text-xs border rounded-lg transition-colors
                 {% if num == categoria.page_number %}bg-navy text-white border-navy
                 {% else %}border-stone-200 text-navy hover:bg-navy hover:text-white{% endif %}"
@@ -826,7 +826,7 @@
       {% endfor %}
 
       {% if categoria.has_next %}
-      <a href="?page_{{ categoria.id }}={{ categoria.next_page_number }}"
+      <a href="?page_{{ categoria.id }}={{ categoria.next_page_number }}#pag-{{ categoria.id }}"
          class="px-3 py-1.5 text-xs border border-stone-200 rounded-lg text-navy
                 hover:bg-navy hover:text-white transition-colors"
          style="text-decoration:none">Siguiente →</a>
@@ -863,4 +863,26 @@
   {% endfor %}
 </div>
 
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function () {
+    // Si la URL tiene ?page_X=N, scrollear al grid de esa categoría
+    var params = new URLSearchParams(window.location.search);
+    var scrollId = null;
+    params.forEach(function (value, key) {
+      if (key.startsWith('page_')) {
+        scrollId = 'pag-' + key.slice(5);  // 'page_6' → 'pag-6'
+      }
+    });
+    if (!scrollId) return;
+    function doScroll() {
+      var el = document.getElementById(scrollId);
+      if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+    }
+    document.addEventListener('alpine:initialized', doScroll);
+    setTimeout(doScroll,50);
+  })();
+</script>
 {% endblock %}

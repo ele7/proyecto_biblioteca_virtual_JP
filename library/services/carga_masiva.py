@@ -18,6 +18,7 @@ se capturan y se acumulan en las listas de resultados.
 
 import io
 import logging
+import unicodedata
 import zipfile
 
 import pandas as pd
@@ -29,78 +30,64 @@ from library.models import Categoria, Libro
 logger = logging.getLogger(__name__)
 
 # ─── Columnas que DEBEN existir en el Excel ───────────────────────────────────
-COLUMNAS_REQUERIDAS = {'titulo', 'autor', 'año', 'categoria'}
+COLUMNAS_REQUERIDAS = {'titulo', 'autor', 'categoria'}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Ayudantes privados
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _construir_indice_zip(zip_file) -> dict:
+def _quitar_tildes(texto: str) -> str:
+    """Elimina diacríticos (tildes, diéresis, etc.) de un texto."""
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', texto)
+        if unicodedata.category(c) != 'Mn'
+    )
+
+
+def _normalizar_nombre(nombre: str) -> str:
+    """Normaliza un nombre de archivo: minúsculas y espacios → guiones bajos."""
+    return nombre.lower().replace(' ', '_')
+
+
+def _extraer_contenidos_zip(zip_bytes: bytes) -> dict:
     """
-    Construye un dict {basename.lower(): ruta_interna_zip} desde un ZIP.
+    Abre el ZIP UNA sola vez y retorna un dict {nombre_normalizado: bytes_del_archivo}.
 
-    Itera todos los miembros del ZIP (incluyendo subdirectorios) y usa
-    solo el nombre base del archivo como clave.  Si hay colisiones de nombre,
-    la última entrada gana (comportamiento documentado).
-
-    Args:
-        zip_file: InMemoryUploadedFile o TemporaryUploadedFile, o None.
+    La clave se normaliza (minúsculas + espacios→guiones bajos) para que los
+    nombres con espacios en el ZIP coincidan con los nombres con guiones bajos
+    del Excel (y viceversa).
 
     Returns:
-        dict. Vacío si zip_file es None o si el ZIP está vacío.
+        dict. Vacío si zip_bytes está vacío o el ZIP es inválido.
     """
-    if zip_file is None:
-        return {}
-
-    indice = {}
+    contenidos = {}
     try:
-        zip_bytes = zip_file.read()
-        zip_file.seek(0)            # rebobinar para usos posteriores
-
         with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
             for nombre_interno in zf.namelist():
-                # Ignorar entradas de directorio
                 if nombre_interno.endswith('/'):
                     continue
-                # Usar solo el nombre base (soporta subcarpetas)
                 partes   = nombre_interno.replace('\\', '/').split('/')
-                basename = partes[-1].lower()
+                basename = _normalizar_nombre(partes[-1])
                 if not basename:
                     continue
-                if basename in indice:
+                if basename in contenidos:
                     logger.warning(
-                        "ZIP: nombre duplicado '%s'. Se usará '%s' (ignorando '%s').",
-                        basename, nombre_interno, indice[basename],
+                        "ZIP: nombre duplicado '%s'. Se usará la primera aparición.",
+                        basename,
                     )
-                indice[basename] = nombre_interno
+                    continue
+                try:
+                    contenidos[basename] = zf.read(nombre_interno)
+                except Exception as exc:
+                    logger.error("Error leyendo '%s' del ZIP: %s", nombre_interno, exc)
 
     except zipfile.BadZipFile:
         logger.error("El archivo ZIP está dañado o no es un ZIP válido.")
     except Exception as exc:
         logger.error("Error leyendo el ZIP: %s", exc)
 
-    return indice
-
-
-def _extraer_bytes_zip(zip_file, ruta_interna: str) -> bytes | None:
-    """
-    Extrae el contenido de un miembro del ZIP como bytes.
-
-    Rebobina `zip_file` antes y después de cada lectura, por lo que
-    puede llamarse múltiples veces sobre el mismo objeto.
-
-    Returns:
-        bytes del archivo, o None si hubo un error.
-    """
-    try:
-        zip_bytes = zip_file.read()
-        zip_file.seek(0)
-        with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
-            return zf.read(ruta_interna)
-    except Exception as exc:
-        logger.error("Error extrayendo '%s' del ZIP: %s", ruta_interna, exc)
-        return None
+    return contenidos
 
 
 def _valor_str(valor) -> str:
@@ -159,7 +146,7 @@ def procesar_carga_libros(excel_file, zip_file) -> dict:
         return resultado
 
     # ── 2. Normalizar nombres de columnas ─────────────────────────────────────
-    df.columns = [str(c).strip().lower() for c in df.columns]
+    df.columns = [_quitar_tildes(str(c).strip().lower()) for c in df.columns]
 
     # ── 3. Validar columnas requeridas ────────────────────────────────────────
     columnas_faltantes = COLUMNAS_REQUERIDAS - set(df.columns)
@@ -175,17 +162,30 @@ def procesar_carga_libros(excel_file, zip_file) -> dict:
         resultado['advertencias'].append("El Excel está vacío, no hay filas que procesar.")
         return resultado
 
-    # ── 4. Construir índice del ZIP ───────────────────────────────────────────
-    indice_zip = _construir_indice_zip(zip_file)
-    if zip_file is not None and not indice_zip:
-        resultado['advertencias'].append(
-            "El ZIP estaba vacío o dañado. Se crearán los libros sin archivos adjuntos."
-        )
+    # ── 4. Leer el ZIP una sola vez y extraer TODOS los archivos en memoria ─────
+    contenidos_zip = {}
+    if zip_file is not None:
+        zip_bytes = zip_file.read()
+        contenidos_zip = _extraer_contenidos_zip(zip_bytes)
+        if not contenidos_zip:
+            resultado['advertencias'].append(
+                "El ZIP estaba vacío o dañado. Se crearán los libros sin archivos adjuntos."
+            )
 
     # ── 5. Cachear categorías (1 query) ───────────────────────────────────────
     cache_categorias = {
         cat.nombre.lower(): cat
         for cat in Categoria.objects.all()
+    }
+
+    # ── 5b. Pre-cargar duplicados existentes (evita N queries en el loop) ─────
+    isbn_existentes = set(
+        Libro.objects.exclude(isbn__isnull=True).exclude(isbn='')
+        .values_list('isbn', flat=True)
+    )
+    titulos_autores_existentes = {
+        (t.lower(), a.lower())
+        for t, a in Libro.objects.values_list('titulo', 'autor')
     }
 
     # ── 6. Procesar fila por fila ─────────────────────────────────────────────
@@ -195,7 +195,6 @@ def procesar_carga_libros(excel_file, zip_file) -> dict:
         # ── 6a. Extraer valores ───────────────────────────────────────────────
         titulo           = _valor_str(row.get('titulo', ''))
         autor            = _valor_str(row.get('autor', ''))
-        año_raw          = row.get('año', '')
         categoria_nombre = _valor_str(row.get('categoria', ''))
         isbn             = _valor_str(row.get('isbn', ''))
         descripcion      = _valor_str(row.get('descripcion', ''))
@@ -215,13 +214,13 @@ def procesar_carga_libros(excel_file, zip_file) -> dict:
             )
             continue
 
-        anio = _valor_año(año_raw)
-        if anio is None:
-            resultado['errores'].append(
+        año_raw = row.get('año', '') if 'año' in df.columns else ''
+        anio    = _valor_año(año_raw)
+        if año_raw and _valor_str(año_raw) and anio is None:
+            resultado['advertencias'].append(
                 f"Fila {num_display} ('{titulo}'): campo 'año' inválido "
-                f"(valor: '{año_raw}'). Debe ser un número entre 1000 y 2100."
+                f"(valor: '{año_raw}'). Se guardará sin año."
             )
-            continue
 
         if not categoria_nombre:
             resultado['errores'].append(
@@ -238,37 +237,64 @@ def procesar_carga_libros(excel_file, zip_file) -> dict:
             )
             continue
 
-        # ── 6d. Detección de duplicados ───────────────────────────────────────
-        # Primero por ISBN (si viene), después por (titulo, autor)
+        # ── 6d. Detección de duplicados: actualizar portada si falta ─────────
+        libro_existente = None
         if isbn:
-            if Libro.objects.filter(isbn=isbn).exists():
-                resultado['advertencias'].append(
-                    f"Fila {num_display} ('{titulo}'): ya existe un libro con ISBN "
-                    f"'{isbn}'. Fila omitida."
-                )
-                continue
+            if isbn in isbn_existentes:
+                libro_existente = Libro.objects.filter(isbn=isbn).first()
         else:
-            # Fallback: comparar título + autor
-            if Libro.objects.filter(titulo__iexact=titulo, autor__iexact=autor).exists():
+            if (titulo.lower(), autor.lower()) in titulos_autores_existentes:
+                libro_existente = Libro.objects.filter(
+                    titulo__iexact=titulo, autor__iexact=autor
+                ).first()
+
+        if libro_existente is not None:
+            # Si ya tiene portada, omitir sin más
+            if libro_existente.portada:
                 resultado['advertencias'].append(
-                    f"Fila {num_display}: ya existe un libro con título '{titulo}' "
-                    f"y autor '{autor}'. Fila omitida."
+                    f"Fila {num_display} ('{titulo}'): ya existe y ya tiene portada. Fila omitida."
                 )
                 continue
 
-        # ── 6e. Resolver archivos del ZIP ─────────────────────────────────────
+            # Sin portada → intentar asignarla desde el ZIP
+            nombre_portada_dup = _valor_str(row.get('portada', ''))
+            if nombre_portada_dup:
+                clave = _normalizar_nombre(nombre_portada_dup)
+                bytes_portada = contenidos_zip.get(clave)
+                if bytes_portada:
+                    try:
+                        libro_existente.portada.save(
+                            nombre_portada_dup,
+                            ContentFile(bytes_portada),
+                            save=True,
+                        )
+                        resultado['advertencias'].append(
+                            f"Fila {num_display} ('{titulo}'): libro existente actualizado con portada."
+                        )
+                    except Exception as exc:
+                        resultado['advertencias'].append(
+                            f"Fila {num_display} ('{titulo}'): libro existente pero no se pudo "
+                            f"guardar la portada: {exc}."
+                        )
+                else:
+                    resultado['advertencias'].append(
+                        f"Fila {num_display} ('{titulo}'): libro existente sin portada, "
+                        f"pero '{nombre_portada_dup}' no se encontró en el ZIP."
+                    )
+            else:
+                resultado['advertencias'].append(
+                    f"Fila {num_display} ('{titulo}'): ya existe y no se indicó portada. Fila omitida."
+                )
+            continue
+
+        # ── 6e. Resolver archivos del ZIP (ya están en memoria) ───────────────
         contenido_pdf     = None
         contenido_portada = None
 
         if nombre_pdf:
-            clave_pdf = nombre_pdf.lower()
-            if clave_pdf in indice_zip:
-                contenido_pdf = _extraer_bytes_zip(zip_file, indice_zip[clave_pdf])
-                if contenido_pdf is None:
-                    resultado['advertencias'].append(
-                        f"Fila {num_display} ('{titulo}'): no se pudo leer "
-                        f"'{nombre_pdf}' del ZIP. El libro se creará sin PDF."
-                    )
+            clave_pdf = _normalizar_nombre(nombre_pdf)
+            if clave_pdf in contenidos_zip:
+                contenido_pdf = contenidos_zip[clave_pdf]
             else:
                 resultado['advertencias'].append(
                     f"Fila {num_display} ('{titulo}'): el archivo '{nombre_pdf}' "
@@ -281,14 +307,9 @@ def procesar_carga_libros(excel_file, zip_file) -> dict:
             )
 
         if nombre_portada:
-            clave_portada = nombre_portada.lower()
-            if clave_portada in indice_zip:
-                contenido_portada = _extraer_bytes_zip(zip_file, indice_zip[clave_portada])
-                if contenido_portada is None:
-                    resultado['advertencias'].append(
-                        f"Fila {num_display} ('{titulo}'): no se pudo leer "
-                        f"'{nombre_portada}' del ZIP. El libro se creará sin portada."
-                    )
+            clave_portada = _normalizar_nombre(nombre_portada)
+            if clave_portada in contenidos_zip:
+                contenido_portada = contenidos_zip[clave_portada]
             else:
                 resultado['advertencias'].append(
                     f"Fila {num_display} ('{titulo}'): la portada '{nombre_portada}' "
@@ -329,6 +350,11 @@ def procesar_carga_libros(excel_file, zip_file) -> dict:
                 libro.save()
                 resultado['creados'] += 1
                 resultado['libros_creados'].append(libro)
+                # Actualizar los sets en memoria para detectar duplicados
+                # entre filas del mismo Excel sin nuevas queries
+                if isbn:
+                    isbn_existentes.add(isbn)
+                titulos_autores_existentes.add((titulo.lower(), autor.lower()))
 
         except Exception as exc:
             logger.exception(
