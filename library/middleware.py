@@ -132,13 +132,14 @@ class RegistroVisitasMiddleware:
 
     def _get_client_ip(self, request) -> str:
         """
-        Obtiene la IP del cliente.
-
-        Nota: HTTP_X_FORWARDED_FOR puede ser falsificado por el cliente
-        si no hay un proxy de confianza delante. En producción, configurar
-        TRUSTED_PROXIES y validar el header apropiadamente.
+        Obtiene la IP real del cliente.
+        Cloudflare añade CF-Connecting-IP con la IP original, que no puede
+        ser falsificada desde el cliente (Cloudflare lo sobrescribe).
         """
-        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-        if x_forwarded_for:
-            return x_forwarded_for.split(",")[0].strip()
+        cf_ip = request.META.get("HTTP_CF_CONNECTING_IP", "").strip()
+        if cf_ip:
+            return cf_ip
+        xff = request.META.get("HTTP_X_FORWARDED_FOR", "").strip()
+        if xff:
+            return xff.split(",")[0].strip()
         return request.META.get("REMOTE_ADDR", "")

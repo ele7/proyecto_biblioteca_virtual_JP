@@ -238,8 +238,15 @@ def descargar_plantilla_libros(request):
 
 @login_required
 def leer_libro(request, autor_slug, titulo_slug):
+    # Pre-filtrar usando la primera palabra del slug para reducir el set
+    primera_titulo = titulo_slug.split('-')[0]
+    primera_autor  = autor_slug.split('-')[0]
+    candidatos = Libro.objects.filter(
+        titulo__istartswith=primera_titulo,
+        autor__istartswith=primera_autor,
+    ).select_related('categoria')
     libro = next(
-        (l for l in Libro.objects.all()
+        (l for l in candidatos
          if slugify(l.autor) == autor_slug and slugify(l.titulo) == titulo_slug),
         None,
     )

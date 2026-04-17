@@ -4,6 +4,7 @@ import string
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.shortcuts import redirect, render
@@ -16,6 +17,24 @@ from library.forms import CambioPasswordForm, OlvidoPasswordForm
 # URL de cambio de contraseña obligatorio — excluida del redirect loop
 # ─────────────────────────────────────────────────────────────────────────────
 _CAMBIO_PWD_URL = 'library:cambiar_password'
+
+_LOGIN_MAX_INTENTOS  = 5
+_LOGIN_BLOQUEO_SEG   = 15 * 60  # 15 minutos
+
+
+def _login_cache_key(ip: str) -> str:
+    return f'login_intentos_{ip}'
+
+
+def _get_ip(request) -> str:
+    # Cloudflare envía la IP real en CF-Connecting-IP
+    cf_ip = request.META.get('HTTP_CF_CONNECTING_IP', '').strip()
+    if cf_ip:
+        return cf_ip
+    xff = request.META.get('HTTP_X_FORWARDED_FOR', '').strip()
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', '')
 
 
 def login_view(request):
@@ -32,6 +51,17 @@ def login_view(request):
         email    = request.POST.get("username", "").strip()
         password = request.POST.get("password", "").strip()
 
+        ip          = _get_ip(request)
+        cache_key   = _login_cache_key(ip)
+        intentos    = cache.get(cache_key, 0)
+
+        if intentos >= _LOGIN_MAX_INTENTOS:
+            messages.error(
+                request,
+                "Demasiados intentos fallidos. Espera 15 minutos antes de volver a intentarlo."
+            )
+            return render(request, "login.html", {"username": email})
+
         if not email or not password:
             messages.error(request, "Debes ingresar email y contraseña.")
         else:
@@ -42,6 +72,7 @@ def login_view(request):
             else:
                 user = authenticate(request, email=email, password=password)
                 if user:
+                    cache.delete(cache_key)
                     login(request, user)
                     # Redirigir a cambio obligatorio si aplica
                     if user.debe_cambiar_password:
@@ -52,6 +83,7 @@ def login_view(request):
                         return redirect(_CAMBIO_PWD_URL)
                     return redirect('library:dashboard')
                 else:
+                    cache.set(cache_key, intentos + 1, _LOGIN_BLOQUEO_SEG)
                     messages.error(request, "Email o contraseña incorrectos.")
 
     return render(request, "login.html", {"username": email})

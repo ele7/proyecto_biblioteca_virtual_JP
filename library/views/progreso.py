@@ -46,8 +46,12 @@ def obtener_progreso(request):
     except (ValueError, TypeError):
         return JsonResponse({'error': 'libro_id inválido.'}, status=400)
 
+    libro = get_object_or_404(Libro, pk=libro_id)
+    if not usuario_puede_ver_libro(request.user, libro):
+        return JsonResponse({'error': 'Sin acceso.'}, status=403)
+
     progreso = ProgresoLectura.objects.filter(
-        usuario=request.user, libro_id=libro_id
+        usuario=request.user, libro=libro
     ).first()
     return JsonResponse({
         'ultima_pagina': progreso.ultima_pagina if progreso else 1,
